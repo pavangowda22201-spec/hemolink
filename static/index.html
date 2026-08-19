@@ -1716,12 +1716,27 @@ async function refreshAll(){
   }catch(e){ console.error(e); }
 
   // Don't blow away a form the person is actively typing into — skip this
-  // render cycle if focus is currently inside an input/select field.
+  // Never rebuild the active view while the user is interacting with it.
+  // API data still refreshes in the background every 5 seconds.
   const active = document.activeElement;
-  const isTyping = active && (active.tagName === "INPUT" || active.tagName === "SELECT");
-  if(isTyping) return;
+  const activeView = mode === "donor"
+    ? document.getElementById("donorView")
+    : document.getElementById("hospitalView");
 
-  if(mode==="donor") renderDonorView(); else renderHospitalView();
+  const interacting =
+    activeView &&
+    (
+      activeView.contains(active) ||
+      active?.closest("button") ||
+      active?.closest("select") ||
+      active?.closest("input") ||
+      active?.closest("textarea")
+    );
+
+  if(interacting) return;
+
+  if(mode==="donor") renderDonorView();
+  else renderHospitalView();
 }
 
 /* ============== DONOR VIEW ============== */
@@ -2210,11 +2225,10 @@ setInterval(async () => {
     cache.donors = await api("/donors/");
     cache.requests = await api("/requests/");
 
-    // Do not rebuild the Hospital view while its form exists.
-    // Rebuilding the view destroys input/select values and causes flicker.
-    if(mode === "donor"){
-      renderDonorView();
-    }
+    // Background data refresh only.
+    // Do not rebuild the active Donor/Hospital form here.
+    // Re-rendering destroys values currently being entered.
+
   }catch(e){
     console.error("Background refresh failed:", e);
   }
