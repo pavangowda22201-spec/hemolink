@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HemoLink â€” Blood Donor Matching</title>
+<title>HemoLink — Blood Donor Matching</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link
@@ -333,7 +333,7 @@
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
 /* =========================================================
-   REDSYNC â€” VISUAL UPGRADE 01
+   REDSYNC — VISUAL UPGRADE 01
    Safe UI-only styling
    ========================================================= */
 
@@ -632,7 +632,7 @@ button.secondary:hover{
   }
 }
 /* =========================================================
-   REDSYNC â€” VISUAL UPGRADE 02
+   REDSYNC — VISUAL UPGRADE 02
    Dashboard + request cards
    ========================================================= */
 
@@ -640,7 +640,7 @@ button.secondary:hover{
 
 #donorView,
 #hospitalView{
-  animation:fadeInView .28s ease-out;
+  animation:none;
 }
 
 @keyframes fadeInView{
@@ -826,7 +826,7 @@ button.secondary:hover{
 
 }
 /* =========================================================
-   REDSYNC â€” VISUAL UPGRADE 03
+   REDSYNC — VISUAL UPGRADE 03
    Donor registration / onboarding
    ========================================================= */
 
@@ -853,7 +853,7 @@ button.secondary:hover{
   padding:22px;
 }
 
-/* First card â€” registration */
+/* First card — registration */
 
 #donorView .grid-2 > .card:first-child{
   border-color:rgba(215,25,45,.16);
@@ -862,7 +862,7 @@ button.secondary:hover{
     inset 0 1px 0 rgba(215,25,45,.08);
 }
 
-/* Second card â€” existing donor */
+/* Second card — existing donor */
 
 #donorView .grid-2 > .card:nth-child(2){
   background:#11151a;
@@ -949,7 +949,7 @@ button.secondary:hover{
 
 }
 /* =========================================================
-   REDSYNC â€” VISUAL UPGRADE 04
+   REDSYNC — VISUAL UPGRADE 04
    Donor dashboard
    ========================================================= */
 
@@ -1104,7 +1104,7 @@ button.secondary:hover{
 
 }
 /* =========================================================
-   REDSYNC â€” VISUAL UPGRADE 05
+   REDSYNC — VISUAL UPGRADE 05
    Hospital dashboard
    ========================================================= */
 
@@ -1255,12 +1255,12 @@ button.secondary:hover{
 
 /* ---------- Location panel ---------- */
 
-#hospitalView .hospital-location-row{
+#hospitalView #reqLoc{
   background:rgba(255,255,255,.018);
   border:1px solid rgba(255,255,255,.07);
   border-radius:9px;
   padding:10px;
-}
+}}
 
 /* ---------- Create request button ---------- */
 
@@ -1436,12 +1436,12 @@ button.secondary:hover{
 
 }
 /* =========================================================
-   REDSYNC â€” VISUAL UPGRADE 06
+   REDSYNC — VISUAL UPGRADE 06
    Location / GPS experience
    ========================================================= */
 
 #donorView .grid-2 > .card:first-child .row,
-#hospitalView .hospital-location-row{
+#hospitalView .row{
   position:relative;
   display:flex;
   align-items:center;
@@ -1473,7 +1473,7 @@ button.secondary:hover{
 
 #regLoc::before,
 #hospitalLoc::before{
-  content:"â—";
+  content:"●";
   color:var(--red);
   margin-right:7px;
   font-size:9px;
@@ -1495,7 +1495,7 @@ button.secondary:hover{
 /* Location button */
 
 #donorView .grid-2 > .card:first-child .row .secondary,
-#hospitalView .hospital-location-row .secondary{
+#hospitalView .row .secondary{
   flex-shrink:0;
   white-space:nowrap;
   font-size:10px;
@@ -1508,7 +1508,7 @@ button.secondary:hover{
 /* Hover */
 
 #donorView .grid-2 > .card:first-child .row:hover,
-#hospitalView .hospital-location-row:hover{
+#hospitalView .row:hover{
   border-color:rgba(193,18,31,.35);
 }
 
@@ -1517,19 +1517,19 @@ button.secondary:hover{
 @media(max-width:640px){
 
   #donorView .grid-2 > .card:first-child .row,
-  #hospitalView .hospital-location-row{
+  #hospitalView .row{
     align-items:stretch;
     flex-direction:column;
   }
 
   #donorView .grid-2 > .card:first-child .row .secondary,
-  #hospitalView .hospital-location-row .secondary{
+  #hospitalView .row .secondary{
     width:100%;
   }
 
 }
 /* =========================================================
-   REDSYNC â€” LIVE LOCATION MAP
+   REDSYNC — LIVE LOCATION MAP
    ========================================================= */
 
 .request-map{
@@ -1669,7 +1669,7 @@ function flashPulse(){
   line.classList.remove("flash"); void line.offsetWidth; line.classList.add("flash");
 }
 function fmtDate(iso){
-  if(!iso) return "â€”";
+  if(!iso) return "—";
   const d = new Date(iso+"Z"); // backend sends naive UTC
   return d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
 }
@@ -1715,11 +1715,11 @@ async function refreshAll(){
     }
   }catch(e){ console.error(e); }
 
-  // Never rebuild an unregistered donor form while the user is entering data.
-  if(mode === "donor" && !currentDonorId){
-    const donorForm = document.getElementById("regName");
-    if(donorForm) return;
-  }
+  // Don't blow away a form the person is actively typing into — skip this
+  // render cycle if focus is currently inside an input/select field.
+  const active = document.activeElement;
+  const isTyping = active && (active.tagName === "INPUT" || active.tagName === "SELECT");
+  if(isTyping) return;
 
   if(mode==="donor") renderDonorView(); else renderHospitalView();
 }
@@ -1743,9 +1743,9 @@ function renderDonorView(){
           <label>Blood group</label>
           <select id="regBlood">${BLOOD_GROUPS.map(b=>`<option>${b}</option>`).join("")}</select>
           <label>Location</label>
-          <div class="row hospital-location-row" style="margin-bottom:14px;">
+          <div class="row" style="margin-bottom:14px;">
             <span class="mono muted" style="font-size:12px;" id="regLoc">${DEFAULT_LAT.toFixed(4)}, ${DEFAULT_LNG.toFixed(4)} (default)</span>
-            <button type="button" class="secondary small" onclick="event.preventDefault(); useMyLocation('reg'); return false;">Use my location</button>
+            <button class="secondary small" onclick="useMyLocation('reg')">Use my location</button>
           </div>
           <button onclick="registerDonor()">Register</button>
         </div>
@@ -1781,7 +1781,7 @@ function renderDonorView(){
     <div class="card row" style="align-items:flex-start;">
       <div>
         <span class="badge blood">${donor.blood_group}</span>
-        ${donor.is_verified ? '<span class="badge verified">âœ“ verified</span>' : '<span class="badge">unverified</span>'}
+        ${donor.is_verified ? '<span class="badge verified">✓ verified</span>' : '<span class="badge">unverified</span>'}
         ${donor.is_suspended ? '<span class="badge urgent-critical">suspended</span>' : ''}
         <div style="margin-top:14px;">
    <div class="mono muted" style="font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;">
@@ -1795,7 +1795,7 @@ function renderDonorView(){
       <div class="muted" style="font-size:13px;text-align:right;">
         <div>${donor.total_donations} donation${donor.total_donations!==1?'s':''}</div>
         <div>${donor.total_no_shows} no-show${donor.total_no_shows!==1?'s':''}</div>
-        <div>${donor.is_available ? 'ðŸŸ¢ available' : 'âšª not available'}</div>
+        <div>${donor.is_available ? '🟢 available' : '⚪ not available'}</div>
       </div>
     </div>
 
@@ -1803,7 +1803,7 @@ function renderDonorView(){
       <div class="card" style="border-color:var(--red);">
         <div class="row">
           <div>
-            <span class="badge status-pending">pending â€” you accepted</span>
+            <span class="badge status-pending">pending — you accepted</span>
             <p style="margin:8px 0 0;font-size:13px;">Head to the hospital to complete your donation.</p>
           </div>
           <div class="timer" id="etaTimer" data-deadline="${myPending.eta_deadline}">${timeRemaining(myPending.eta_deadline)}</div>
@@ -1826,7 +1826,7 @@ return `
       <span class="badge urgent-${r.urgency}">${r.urgency}</span>
       <span class="badge status-${r.status}">${r.status}</span>
       <div class="muted mono" style="font-size:12px;margin-top:8px;">
-        needs ${r.blood_group_needed} Â· ${r.units_needed} unit(s) Â· within ${r.current_radius_km}km
+        needs ${r.blood_group_needed} · ${r.units_needed} unit(s) · within ${r.current_radius_km}km
       </div>
     </div>
 
@@ -1884,7 +1884,7 @@ function useMyLocation(prefix){
     }
 
   }, ()=>{
-    toast("Couldn't get location â€” using default");
+    toast("Couldn't get location — using default");
   });
 }function initRequestMap(){
   const mapEl = document.getElementById("requestMap");
@@ -1908,14 +1908,14 @@ const bloodIcon = L.divIcon({
   className: "blood-request-marker",
   html: `
     <div class="blood-pin">
-      <div class="blood-pin-icon">ðŸ©¸</div>
+      <div class="blood-pin-icon">🩸</div>
     </div>
   `,
   iconSize: [48, 58],
   iconAnchor: [24, 58],
   popupAnchor: [0, -52]
 });const hospitalName = document.getElementById("reqHospital")?.value.trim() || "Hospital";
-const bloodGroup = document.getElementById("reqBlood")?.value || "â€”";
+const bloodGroup = document.getElementById("reqBlood")?.value || "—";
 const units = document.getElementById("reqUnits")?.value || "1";
 const urgency = document.getElementById("reqUrgency")?.value || "urgent";
 
@@ -1928,25 +1928,25 @@ const popupContent = `
       margin-bottom:10px;
       color:#c1121f;
     ">
-      ðŸ©¸ Blood Request
+      🩸 Blood Request
     </div>
 
     <div style="margin-bottom:6px;">
-      ðŸ¥ <strong>${hospitalName}</strong>
+      🏥 <strong>${hospitalName}</strong>
     </div>
 
     <div style="margin-bottom:6px;">
-      ðŸ©¸ Blood Group:
+      🩸 Blood Group:
       <strong>${bloodGroup}</strong>
     </div>
 
     <div style="margin-bottom:6px;">
-      ðŸ“¦ Units Required:
+      📦 Units Required:
       <strong>${units}</strong>
     </div>
 
     <div style="margin-bottom:6px;">
-      âš ï¸ Urgency:
+      ⚠️ Urgency:
       <strong>${urgency.toUpperCase()}</strong>
     </div>
 
@@ -1957,7 +1957,7 @@ const popupContent = `
       font-size:12px;
       color:#666;
     ">
-      ðŸ“ Donor search radius:
+      📍 Donor search radius:
       <strong>5 km</strong>
     </div>
 
@@ -1983,7 +1983,7 @@ L.marker([lat, lng], {
   icon: currentLocationIcon
 })
   .addTo(map)
-  .bindPopup("<strong>ðŸ“ Current location</strong>");
+  .bindPopup("<strong>📍 Current location</strong>");
 L.circle([lat, lng], {
   radius: 5000,
   color: "#c1121f",
@@ -1996,7 +1996,7 @@ const radiusLabel = L.control({ position: "topright" });
 
 radiusLabel.onAdd = function() {
   const div = L.DomUtil.create("div");
-  div.innerHTML = "ðŸ”´ SEARCH RADIUS: <strong>5 KM</strong>";
+  div.innerHTML = "🔴 SEARCH RADIUS: <strong>5 KM</strong>";
   div.style.background = "white";
   div.style.padding = "8px 12px";
   div.style.borderRadius = "6px";
@@ -2029,111 +2029,67 @@ function switchDonor(){
 async function acceptRequest(requestId){
   try{
     await api(`/acceptances/${requestId}/accept/${currentDonorId}`, {method:"POST"});
-    toast("Accepted â€” head to the hospital");
+    toast("Accepted — head to the hospital");
     flashPulse();
     await refreshAll();
   }catch(e){ toast(e.message); }
 }
 
-async function registerDonor(){
-  const name = document.getElementById("regName").value.trim();
-  const phone = document.getElementById("regPhone").value.trim();
-  const blood_group = document.getElementById("regBlood").value;
-  const locEl = document.getElementById("regLoc");
-  const latitude = parseFloat(locEl.dataset.lat || DEFAULT_LAT);
-  const longitude = parseFloat(locEl.dataset.lng || DEFAULT_LNG);
-
-  if(!name || !phone){
-    toast("Enter your name and phone");
-    return;
-  }
-
-  try{
-    const donor = await api("/donors/", {
-      method:"POST",
-      body:JSON.stringify({
-        name,
-        phone,
-        blood_group,
-        latitude,
-        longitude
-      })
-    });
-
-    currentDonorId = donor.id;
-    localStorage.setItem("hemolink_donor_id", donor.id);
-    toast("Welcome to HemoLink");
-    await refreshAll();
-  }catch(e){
-    toast(e.message);
-  }
-}
-
-
 /* ============== HOSPITAL VIEW ============== */
 
 function renderHospitalView(){
   const el = document.getElementById("hospitalView");
+const activeRequests = cache.requests.filter(
+  r => r.status === "open" || r.status === "matching"
+).length;
 
-  const activeRequests = cache.requests.filter(
-    r => r.status === "open" || r.status === "matching"
-  ).length;
+const fulfilledRequests = cache.requests.filter(
+  r => r.status === "fulfilled"
+).length;
 
-  const fulfilledRequests = cache.requests.filter(
-    r => r.status === "fulfilled"
-  ).length;
-
-  const pendingMatches = Object.values(cache.acceptancesByRequest)
-    .flat()
-    .filter(a => a.status === "pending").length;
-
+const pendingMatches = Object.values(cache.acceptancesByRequest)
+  .flat()
+  .filter(a => a.status === "pending").length;
   el.innerHTML = `
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value">${activeRequests}</div>
-        <div class="stat-label">Active Requests</div>
-      </div>
+ <div class="stats-grid">
 
-      <div class="stat-card">
-        <div class="stat-value">${cache.donors.length}</div>
-        <div class="stat-label">Registered Donors</div>
-      </div>
+  <div class="stat-card">
+    <div class="stat-value">${activeRequests}</div>
+    <div class="stat-label">Active Requests</div>
+  </div>
 
-      <div class="stat-card">
-        <div class="stat-value">${fulfilledRequests}</div>
-        <div class="stat-label">Fulfilled</div>
-      </div>
+  <div class="stat-card">
+    <div class="stat-value">${cache.donors.length}</div>
+    <div class="stat-label">Registered Donors</div>
+  </div>
 
-      <div class="stat-card">
-        <div class="stat-value">${pendingMatches}</div>
-        <div class="stat-label">Pending Matches</div>
-      </div>
-    </div>
+  <div class="stat-card">
+    <div class="stat-value">${fulfilledRequests}</div>
+    <div class="stat-label">Fulfilled</div>
+  </div>
 
-    <h2>New blood request</h2>
-    <p class="section-note">
-      Matching starts at 5km and expands automatically if too few donors are found.
-    </p>
+  <div class="stat-card">
+    <div class="stat-value">${pendingMatches}</div>
+    <div class="stat-label">Pending Matches</div>
+  </div>
 
+</div>   
+<h2>New blood request</h2>
+    <p class="section-note">Matching starts at 5km and expands automatically if too few donors are found.</p>
     <div class="card">
       <div class="grid-2">
         <div>
           <label>Hospital name</label>
           <input id="reqHospital" placeholder="e.g. St. Mary's Hospital" />
         </div>
-
         <div>
           <label>Blood group needed</label>
-          <select id="reqBlood">
-            ${BLOOD_GROUPS.map(b => `<option>${b}</option>`).join("")}
-          </select>
+          <select id="reqBlood">${BLOOD_GROUPS.map(b=>`<option>${b}</option>`).join("")}</select>
         </div>
-
         <div>
           <label>Units needed</label>
           <input id="reqUnits" type="number" min="1" value="1" />
         </div>
-
         <div>
           <label>Urgency</label>
           <select id="reqUrgency">
@@ -2143,150 +2099,74 @@ function renderHospitalView(){
           </select>
         </div>
       </div>
-
       <label>Location</label>
-
-      <div class="row hospital-location-row" style="margin-bottom:14px;">
-        <span
-          class="mono muted"
-          style="font-size:12px;"
-          id="reqLoc"
-        >${DEFAULT_LAT.toFixed(4)}, ${DEFAULT_LNG.toFixed(4)} (default)</span>
-
-        <button
-          class="secondary small"
-          onclick="useMyLocation('req')"
-        >Use my location</button>
+      <div class="row" style="margin-bottom:14px;">
+        <span class="mono muted" style="font-size:12px;" id="reqLoc">${DEFAULT_LAT.toFixed(4)}, ${DEFAULT_LNG.toFixed(4)} (default)</span>
+        <button class="secondary small" onclick="useMyLocation('req')">Use my location</button>
       </div>
-
-      <div id="requestMap" class="request-map"></div>
-
-      <button onclick="createRequest()">
-        Create request &amp; find donors
-      </button>
+<div id="requestMap" class="request-map"></div>
+      <button onclick="createRequest()">Create request &amp; find donors</button>
     </div>
 
     <h2 style="margin-top:28px;">Active &amp; recent requests</h2>
-
-    ${
-      cache.requests.length === 0
-        ? `<div class="empty">No requests yet.</div>`
-        : cache.requests.map(r => {
-            const accs = cache.acceptancesByRequest[r.id] || [];
-
-            return `
-              <div class="card hospital-request-card">
-                <div class="request-header">
-                  <div>
-                    <strong>${r.hospital_name}</strong>
-                    <span class="badge blood" style="margin-left:6px;">
-                      ${r.blood_group_needed}
-                    </span>
-                    <span class="badge urgent-${r.urgency}">
-                      ${r.urgency}
-                    </span>
-                    <span class="badge status-${r.status}">
-                      ${r.status}
-                    </span>
-                  </div>
-                </div>
-
-                <div class="request-meta">
-                  <span>🩸 ${r.blood_group_needed}</span>
-                  <span>📦 ${r.units_needed} unit${r.units_needed > 1 ? "s" : ""}</span>
-                  <span>📍 ${r.current_radius_km}km radius</span>
-                  <span>🕒 ${fmtDate(r.created_at)}</span>
-                </div>
-
-                ${
-                  accs.length === 0
-                    ? `<p class="muted" style="font-size:12px;margin:10px 0 0;">
-                         No donors have accepted yet.
-                       </p>`
-                    : `
-                      <div class="acceptance-list">
-                        ${accs.map(a => {
-                          const d = cache.donors.find(x => x.id === a.donor_id);
-
-                          return `
-                            <div class="acceptance-row">
-                              <span style="font-size:13px;">
-                                ${d ? d.name : a.donor_id.slice(0,8)}
-                                <span class="muted mono" style="font-size:11px;">
-                                  ${d ? d.phone : ""}
-                                </span>
-                              </span>
-
-                              <span class="acceptance-actions">
-                                <span class="badge status-${a.status}">
-                                  ${a.status.replace("_"," ")}
-                                </span>
-
-                                ${
-                                  a.status === "pending"
-                                    ? `<button
-                                         class="small"
-                                         onclick="fulfillAcceptance('${a.id}')"
-                                       >Mark fulfilled</button>`
-                                    : ""
-                                }
-                              </span>
-                            </div>
-                          `;
-                        }).join("")}
-                      </div>
-                    `
-                }
-              </div>
-            `;
-          }).join("")
+    ${cache.requests.length===0 ? `<div class="empty">No requests yet.</div>` :
+      cache.requests.map(r=>{
+        const accs = cache.acceptancesByRequest[r.id] || [];
+        return `
+        <div class="card">
+          <div class="row">
+            <div>
+              <strong>${r.hospital_name}</strong>
+              <span class="badge blood" style="margin-left:6px;">${r.blood_group_needed}</span>
+              <span class="badge urgent-${r.urgency}">${r.urgency}</span>
+              <span class="badge status-${r.status}">${r.status}</span>
+            </div>
+       <div class="request-meta">
+  <span>🩸 ${r.blood_group_needed}</span>
+  <span>📦 ${r.units_needed} unit${r.units_needed > 1 ? "s" : ""}</span>
+  <span>📍 ${r.current_radius_km}km radius</span>
+  <span>🕒 ${fmtDate(r.created_at)}</span>
+</div>
+  
+          ${accs.length===0 ? `<p class="muted" style="font-size:12px;margin:10px 0 0;">No donors have accepted yet.</p>` :
+            `<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+              ${accs.map(a=>{
+                const d = cache.donors.find(x=>x.id===a.donor_id);
+                return `
+                <div class="row" style="background:#141414;padding:8px 12px;border-radius:6px;">
+                  <span style="font-size:13px;">${d ? d.name : a.donor_id.slice(0,8)} <span class="muted mono" style="font-size:11px;">${d ? d.phone : ''}</span></span>
+                  <span class="row" style="gap:8px;width:auto;">
+                    <span class="badge status-${a.status}">${a.status.replace('_',' ')}</span>
+                    ${a.status==="pending" ? `<button class="small" onclick="fulfillAcceptance('${a.id}')">Mark fulfilled</button>` : ""}
+                  </span>
+                </div>`;
+              }).join("")}
+            </div>`
+          }
+        </div>`;
+      }).join("")
     }
 
     <h2 style="margin-top:28px;">Donor pool</h2>
     <p class="section-note">${cache.donors.length} registered donor(s).</p>
-
-    <div class="hospital-donor-list">
-      ${
-        cache.donors.map(d => `
-          <div class="card hospital-donor-card">
-            <div class="donor-info">
-              <strong>${d.name}</strong>
-              <span class="badge blood" style="margin-left:6px;">
-                ${d.blood_group}
-              </span>
-
-              ${d.is_verified
-                ? '<span class="badge verified">✓ verified</span>'
-                : ""}
-
-              ${d.is_suspended
-                ? '<span class="badge urgent-critical">suspended</span>'
-                : ""}
-            </div>
-
-            <div class="donor-actions">
-              <span class="muted mono" style="font-size:12px;">
-                score ${Math.round(d.reliability_score)}
-                · ${d.total_donations} donations
-              </span>
-
-              ${
-                (!d.is_verified && d.total_donations > 0)
-                  ? `<button
-                       class="small secondary"
-                       onclick="verifyDonor('${d.id}')"
-                     >Verify</button>`
-                  : ""
-              }
-            </div>
-          </div>
-        `).join("")
-      }
-    </div>
+    ${cache.donors.map(d=>`
+      <div class="card row">
+        <div>
+          <strong>${d.name}</strong>
+          <span class="badge blood" style="margin-left:6px;">${d.blood_group}</span>
+          ${d.is_verified ? '<span class="badge verified">✓ verified</span>' : ''}
+          ${d.is_suspended ? '<span class="badge urgent-critical">suspended</span>' : ''}
+        </div>
+        <span class="row" style="gap:10px;width:auto;">
+          <span class="muted mono" style="font-size:12px;">score ${Math.round(d.reliability_score)} · ${d.total_donations} donations</span>
+          ${(!d.is_verified && d.total_donations>0) ? `<button class="small secondary" onclick="verifyDonor('${d.id}')">Verify</button>` : ""}
+        </span>
+      </div>
+    `).join("")}
   `;
-
-  initRequestMap();
+initRequestMap();
 }
+
 async function createRequest(){
  const hospital_name = document.getElementById("reqHospital").value.trim();
   const blood_group_needed = document.getElementById("reqBlood").value;
@@ -2300,7 +2180,7 @@ async function createRequest(){
     await api("/requests/", {method:"POST", body:JSON.stringify({
       hospital_name, blood_group_needed, units_needed, urgency, latitude, longitude, eta_window_minutes:45
     })});
-    toast("Request created â€” matching donors now");
+    toast("Request created — matching donors now");
     flashPulse();
     await refreshAll();
   }catch(e){ toast(e.message); }
@@ -2309,7 +2189,7 @@ async function createRequest(){
 async function fulfillAcceptance(acceptanceId){
   try{
     await api(`/acceptances/${acceptanceId}/fulfill`, {method:"POST"});
-    toast("Marked fulfilled â€” donor rewarded, others stood down");
+    toast("Marked fulfilled — donor rewarded, others stood down");
     flashPulse();
     await refreshAll();
   }catch(e){ toast(e.message); }
@@ -2325,7 +2205,20 @@ async function verifyDonor(donorId){
 
 /* ============== INIT ============== */
 refreshAll();
-setInterval(refreshAll, 5000);
+setInterval(async () => {
+  try {
+    cache.donors = await api("/donors/");
+    cache.requests = await api("/requests/");
+
+    // Do not rebuild the Hospital view while its form exists.
+    // Rebuilding the view destroys input/select values and causes flicker.
+    if(mode === "donor"){
+      renderDonorView();
+    }
+  }catch(e){
+    console.error("Background refresh failed:", e);
+  }
+}, 5000);
 
 // Updates just the countdown timer's text every second, without touching
 // the rest of the page (so it never interrupts typing in a form field).
@@ -2338,14 +2231,3 @@ setInterval(()=>{
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
