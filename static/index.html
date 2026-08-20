@@ -1441,7 +1441,7 @@ button.secondary:hover{
    ========================================================= */
 
 #donorView .grid-2 > .card:first-child .row,
-#hospitalView .row{
+#hospitalView #hospitalLocationRow{
   position:relative;
   display:flex;
   align-items:center;
@@ -1495,7 +1495,7 @@ button.secondary:hover{
 /* Location button */
 
 #donorView .grid-2 > .card:first-child .row .secondary,
-#hospitalView .row .secondary{
+#hospitalView #hospitalLocationRow .secondary{
   flex-shrink:0;
   white-space:nowrap;
   font-size:10px;
@@ -1508,7 +1508,7 @@ button.secondary:hover{
 /* Hover */
 
 #donorView .grid-2 > .card:first-child .row:hover,
-#hospitalView .row:hover{
+#hospitalView #hospitalLocationRow:hover{
   border-color:rgba(193,18,31,.35);
 }
 
@@ -1616,6 +1616,104 @@ button.secondary:hover{
   border: 2px solid white;
   box-shadow: 0 0 10px rgba(66,201,130,.7);
 }
+
+#hospitalView .request-meta{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
+  gap:8px !important;
+  width:100% !important;
+  margin-top:14px !important;
+}
+
+#hospitalView .request-meta span{
+  display:inline-flex !important;
+  align-items:center !important;
+  width:auto !important;
+  min-width:0 !important;
+  flex:none !important;
+}
+
+#hospitalView .card > .row{
+  width:100% !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:space-between !important;
+}
+
+#hospitalView .card > .row > div{
+  width:auto !important;
+  flex:1 !important;
+}
+
+#hospitalView .card{
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+
+#hospitalView .card > .row:has(.request-meta){
+  display:block !important;
+  width:100% !important;
+  min-height:0 !important;
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0 !important;
+  padding:0 !important;
+}
+
+#hospitalView .card > .row:has(.request-meta) > div:first-child{
+  width:100% !important;
+  display:flex !important;
+  align-items:center !important;
+  flex-wrap:wrap !important;
+  gap:6px !important;
+}
+
+#hospitalView .card > .row:has(.request-meta) .request-meta{
+  display:flex !important;
+  width:100% !important;
+  margin-top:14px !important;
+  flex-wrap:wrap !important;
+  gap:8px !important;
+}
+
+#hospitalView .card > .row:has(.request-meta) .request-meta span{
+  width:auto !important;
+  flex:none !important;
+}
+
+#hospitalView .request-header{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  padding:0;
+  margin:0;
+  background:transparent;
+  border:0;
+  min-height:0;
+}
+
+#hospitalView .request-header > div:first-child{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
+}
+
+#hospitalView .request-header + .request-meta{
+  width:100%;
+}
+
+@media(max-width:640px){
+  #hospitalView .request-header{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}
 </style>
 </head>
 <body>
@@ -1700,6 +1798,7 @@ function setMode(m){
   document.getElementById("tabHospital").classList.toggle("active", m==="hospital");
   document.getElementById("donorView").style.display = m==="donor" ? "block":"none";
   document.getElementById("hospitalView").style.display = m==="hospital" ? "block":"none";
+  window.justSwitchedMode = true;
   refreshAll();
 }
 
@@ -1733,7 +1832,7 @@ async function refreshAll(){
       active?.closest("textarea")
     );
 
-  if(interacting) return;
+  if(interacting && !window.justSwitchedMode) return;
 
   if(mode==="donor") renderDonorView();
   else renderHospitalView();
@@ -1758,7 +1857,7 @@ function renderDonorView(){
           <label>Blood group</label>
           <select id="regBlood">${BLOOD_GROUPS.map(b=>`<option>${b}</option>`).join("")}</select>
           <label>Location</label>
-          <div class="row" style="margin-bottom:14px;">
+          <div id="hospitalLocationRow" class="row" style="margin-bottom:14px;">
             <span class="mono muted" style="font-size:12px;" id="regLoc">${DEFAULT_LAT.toFixed(4)}, ${DEFAULT_LNG.toFixed(4)} (default)</span>
             <button class="secondary small" onclick="useMyLocation('reg')">Use my location</button>
           </div>
@@ -2026,6 +2125,22 @@ radiusLabel.addTo(map);
 
   setTimeout(()=>map.invalidateSize(),100);
 }
+async function registerDonor(){
+  const name = document.getElementById("regName").value.trim();
+  const phone = document.getElementById("regPhone").value.trim();
+  const blood_group = document.getElementById("regBlood").value;
+  const locEl = document.getElementById("regLoc");
+  const latitude = parseFloat(locEl.dataset.lat || DEFAULT_LAT);
+  const longitude = parseFloat(locEl.dataset.lng || DEFAULT_LNG);
+  if(!name || !phone){ toast("Enter your name and phone"); return; }
+  try{
+    const donor = await api("/donors/", {method:"POST", body:JSON.stringify({name,phone,blood_group,latitude,longitude})});
+    currentDonorId = donor.id;
+    localStorage.setItem("hemolink_donor_id", donor.id);
+    toast("Welcome to HemoLink");
+    await refreshAll();
+  }catch(e){ toast(e.message); }
+}
 function lookupDonor(){
   const phone = document.getElementById("lookupPhone").value.trim();
   const donor = cache.donors.find(d=>d.phone===phone);
@@ -2062,7 +2177,7 @@ const fulfilledRequests = cache.requests.filter(
   r => r.status === "fulfilled"
 ).length;
 
-const pendingMatches = Object.values(cache.acceptancesByRequest)
+const pendingMatches = Object.values(cache.acceptancesByRequest || {})
   .flat()
   .filter(a => a.status === "pending").length;
   el.innerHTML = `
@@ -2115,7 +2230,7 @@ const pendingMatches = Object.values(cache.acceptancesByRequest)
         </div>
       </div>
       <label>Location</label>
-      <div class="row" style="margin-bottom:14px;">
+      <div id="hospitalLocationRow" class="row" style="margin-bottom:14px;">
         <span class="mono muted" style="font-size:12px;" id="reqLoc">${DEFAULT_LAT.toFixed(4)}, ${DEFAULT_LNG.toFixed(4)} (default)</span>
         <button class="secondary small" onclick="useMyLocation('req')">Use my location</button>
       </div>
@@ -2126,10 +2241,10 @@ const pendingMatches = Object.values(cache.acceptancesByRequest)
     <h2 style="margin-top:28px;">Active &amp; recent requests</h2>
     ${cache.requests.length===0 ? `<div class="empty">No requests yet.</div>` :
       cache.requests.map(r=>{
-        const accs = cache.acceptancesByRequest[r.id] || [];
+        const accs = (cache.acceptancesByRequest || {})[r.id] || [];
         return `
         <div class="card">
-          <div class="row">
+          <div class="request-header">
             <div>
               <strong>${r.hospital_name}</strong>
               <span class="badge blood" style="margin-left:6px;">${r.blood_group_needed}</span>
@@ -2158,6 +2273,7 @@ const pendingMatches = Object.values(cache.acceptancesByRequest)
               }).join("")}
             </div>`
           }
+          </div>
         </div>`;
       }).join("")
     }
@@ -2179,7 +2295,7 @@ const pendingMatches = Object.values(cache.acceptancesByRequest)
       </div>
     `).join("")}
   `;
-initRequestMap();
+setTimeout(()=>initRequestMap(),100);
 }
 
 async function createRequest(){
