@@ -2138,84 +2138,6 @@ body.dark-mode .mode-btn.active{
   display:block;
   margin-bottom:7px;
 }
-
-/* =========================================================
-   REDSYNC — HOSPITAL DONOR HEALTH PROFILE
-   ========================================================= */
-
-.hospital-donor-health{
-  margin-top:14px;
-  padding:16px;
-  border:1px solid rgba(215,25,45,.16);
-  border-radius:12px;
-  background:
-    linear-gradient(145deg,rgba(215,25,45,.045),rgba(255,255,255,.018)),
-    #0d1014;
-  animation:healthPanelIn .2s ease;
-}
-
-.hospital-health-title{
-  margin-bottom:12px;
-  font-size:11px;
-  font-weight:800;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:#d71920;
-}
-
-.hospital-health-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-}
-
-.hospital-health-grid > div{
-  padding:11px 12px;
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:9px;
-  background:rgba(255,255,255,.025);
-}
-
-.hospital-health-grid span{
-  display:block;
-  margin-bottom:4px;
-  font-size:10px;
-  color:#737982;
-  text-transform:uppercase;
-  letter-spacing:.05em;
-}
-
-.hospital-health-grid strong{
-  display:block;
-  font-size:12px;
-  line-height:1.45;
-  color:#f4f5f6;
-  font-weight:600;
-  word-break:break-word;
-}
-
-.hospital-health-updated{
-  margin-top:11px;
-  font-size:10px;
-  color:#666c74;
-}
-
-@keyframes healthPanelIn{
-  from{
-    opacity:0;
-    transform:translateY(-4px);
-  }
-  to{
-    opacity:1;
-    transform:translateY(0);
-  }
-}
-
-@media(max-width:640px){
-  .hospital-health-grid{
-    grid-template-columns:1fr;
-  }
-}
 </style>
 <style>
 /* =========================================================
@@ -4587,13 +4509,6 @@ function renderHospitalView(){
                               ${a.status.replace("_"," ")}
                             </span>
 
-                            <button
-                              class="small secondary"
-                              onclick="toggleDonorHealth('${a.id}')"
-                            >
-                              View health profile
-                            </button>
-
                             ${
                               a.status === "pending"
                               ? `
@@ -4605,70 +4520,6 @@ function renderHospitalView(){
                                 </button>
                               `
                               : ""
-                            }
-
-                          </div>
-
-                          <div
-                            id="health-${a.id}"
-                            class="hospital-donor-health"
-                            style="display:none;"
-                          >
-
-                            <div class="hospital-health-title">
-                              Donor health profile
-                            </div>
-
-                            ${
-                              d
-                              ? `
-                                <div class="hospital-health-grid">
-
-                                  <div>
-                                    <span>Smoking / tobacco</span>
-                                    <strong>${d.smoking_tobacco ? "Yes" : "No"}</strong>
-                                  </div>
-
-                                  <div>
-                                    <span>Alcohol use</span>
-                                    <strong>${d.alcohol_use ? "Yes" : "No"}</strong>
-                                  </div>
-
-                                  <div>
-                                    <span>Previous illnesses</span>
-                                    <strong>${d.previous_illnesses || "None reported"}</strong>
-                                  </div>
-
-                                  <div>
-                                    <span>Diseases</span>
-                                    <strong>${d.diseases || "None reported"}</strong>
-                                  </div>
-
-                                  <div>
-                                    <span>Medications</span>
-                                    <strong>${d.medications || "None reported"}</strong>
-                                  </div>
-
-                                  <div>
-                                    <span>Medical history</span>
-                                    <strong>${d.medical_history || "None reported"}</strong>
-                                  </div>
-
-                                </div>
-
-                                <div class="hospital-health-updated">
-                                  ${
-                                    d.health_profile_updated_at
-                                      ? "Last updated: " + new Date(d.health_profile_updated_at).toLocaleString()
-                                      : "Health profile not updated yet"
-                                  }
-                                </div>
-                              `
-                              : `
-                                <div class="hospital-empty">
-                                  Donor health profile unavailable.
-                                </div>
-                              `
                             }
 
                           </div>
@@ -4788,15 +4639,6 @@ function renderHospitalView(){
 
   setTimeout(()=>initRequestMap(),100);
 }
-function toggleDonorHealth(acceptanceId){
-  const panel = document.getElementById("health-" + acceptanceId);
-
-  if(!panel) return;
-
-  const isOpen = panel.style.display !== "none";
-
-  panel.style.display = isOpen ? "none" : "block";
-}
 async function createRequest(){
  const hospital_name = document.getElementById("reqHospital").value.trim();
   const blood_group_needed = document.getElementById("reqBlood").value;
@@ -4860,9 +4702,6 @@ setInterval(()=>{
 </script>
 </body>
 </html>
-
-
-
 
 
 
