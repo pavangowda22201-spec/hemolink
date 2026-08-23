@@ -1,5 +1,5 @@
-﻿"""
-RUN LOCATION: Imported by routers/*.py â€” not run directly.
+"""
+RUN LOCATION: Imported by routers/*.py — not run directly.
 """
 from datetime import datetime
 from typing import Optional
@@ -31,23 +31,6 @@ class DonorOut(BaseModel):
     total_donations: int
     total_no_shows: int
     cooldown_until: Optional[datetime] = None
-
-    smoking_tobacco: bool
-    alcohol_use: bool
-    previous_illnesses: Optional[str] = None
-    diseases: Optional[str] = None
-    medications: Optional[str] = None
-    medical_history: Optional[str] = None
-    health_profile_updated_at: Optional[datetime] = None
-
-
-class DonorHealthProfileUpdate(BaseModel):
-    smoking_tobacco: bool = False
-    alcohol_use: bool = False
-    previous_illnesses: Optional[str] = None
-    diseases: Optional[str] = None
-    medications: Optional[str] = None
-    medical_history: Optional[str] = None
 
 
 class RequestCreate(BaseModel):
@@ -92,4 +75,3 @@ class AcceptanceOut(BaseModel):
     accepted_at: datetime
     eta_deadline: datetime
     resolved_at: Optional[datetime] = None
-

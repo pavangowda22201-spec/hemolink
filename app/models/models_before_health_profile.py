@@ -1,5 +1,5 @@
-﻿"""
-RUN LOCATION: Imported by main.py â€” not run directly.
+"""
+RUN LOCATION: Imported by main.py — not run directly.
 This file defines the database tables (SQLAlchemy ORM models).
 """
 import enum
@@ -75,14 +75,6 @@ class Donor(Base):
     last_donation_at = Column(DateTime, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)
-    # Donor health profile
-    smoking_tobacco = Column(Boolean, default=False, nullable=False)
-    alcohol_use = Column(Boolean, default=False, nullable=False)
-    previous_illnesses = Column(Text, nullable=True)
-    diseases = Column(Text, nullable=True)
-    medications = Column(Text, nullable=True)
-    medical_history = Column(Text, nullable=True)
-    health_profile_updated_at = Column(DateTime, nullable=True)
 
     acceptances = relationship("Acceptance", back_populates="donor")
 
@@ -121,7 +113,7 @@ class BloodRequest(Base):
 class Acceptance(Base):
     """
     A donor's acceptance of a request. Multiple donors can hold a PENDING
-    acceptance on the same request simultaneously (parallel confirmation) â€”
+    acceptance on the same request simultaneously (parallel confirmation) —
     the first to complete flips to FULFILLED and the rest are stood down.
     """
     __tablename__ = "acceptances"
@@ -150,5 +142,3 @@ class NotificationLog(Base):
     radius_tier_km = Column(Float, nullable=False)
     message = Column(Text, nullable=False)
     sent_at = Column(DateTime, default=datetime.utcnow)
-
-

@@ -1,5 +1,5 @@
-﻿"""
-RUN LOCATION: Imported by main.py â€” not run directly.
+"""
+RUN LOCATION: Imported by main.py — not run directly.
 """
 from typing import List
 
@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.models import Donor
-from app.schemas.schemas import DonorCreate, DonorOut, DonorHealthProfileUpdate
+from app.schemas.schemas import DonorCreate, DonorOut
 
 router = APIRouter(prefix="/donors", tags=["donors"])
 
@@ -53,31 +53,4 @@ def verify_donor(donor_id: str, db: Session = Depends(get_db)):
     donor.is_verified = True
     db.commit()
     db.refresh(donor)
-    return donor
-
-@router.put("/{donor_id}/health-profile", response_model=DonorOut)
-def update_health_profile(
-    donor_id: str,
-    payload: DonorHealthProfileUpdate,
-    db: Session = Depends(get_db)
-):
-    """Create or update a donor's health profile."""
-    donor = db.query(Donor).filter(Donor.id == donor_id).first()
-
-    if not donor:
-        raise HTTPException(status_code=404, detail="Donor not found.")
-
-    donor.smoking_tobacco = payload.smoking_tobacco
-    donor.alcohol_use = payload.alcohol_use
-    donor.previous_illnesses = payload.previous_illnesses
-    donor.diseases = payload.diseases
-    donor.medications = payload.medications
-    donor.medical_history = payload.medical_history
-
-    from datetime import datetime
-    donor.health_profile_updated_at = datetime.utcnow()
-
-    db.commit()
-    db.refresh(donor)
-
     return donor
