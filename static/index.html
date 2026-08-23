@@ -1236,6 +1236,20 @@ button.secondary:hover{
 #hospitalView .card select{
   min-height:44px;
   margin-bottom:16px;
+  color:#f1f3f5 !important;
+  -webkit-text-fill-color:#f1f3f5 !important;
+  caret-color:#f1f3f5;
+}
+
+#hospitalView .card input:focus,
+#hospitalView .card select:focus{
+  color:#f1f3f5 !important;
+  -webkit-text-fill-color:#f1f3f5 !important;
+}
+
+#hospitalView .card input:focus,
+#hospitalView .card select:focus{
+  color:var(--text);
 }
 
 #hospitalView .card input::placeholder{
@@ -2315,6 +2329,23 @@ body.dark-mode .mode-btn.active{
   .hospital-health-grid{
     grid-template-columns:1fr;
   }
+}
+
+/* =========================================================
+   REDSYNC — FORM TEXT VISIBILITY FIX
+   ========================================================= */
+
+#donorView input,
+#donorView select{
+  color:#f1f3f5 !important;
+  -webkit-text-fill-color:#f1f3f5 !important;
+  caret-color:#f1f3f5;
+}
+
+#donorView input:focus,
+#donorView select:focus{
+  color:#f1f3f5 !important;
+  -webkit-text-fill-color:#f1f3f5 !important;
 }
 </style>
 <style>
@@ -4960,6 +4991,9 @@ setInterval(()=>{
 </script>
 </body>
 </html>
+
+
+
 
 
 
