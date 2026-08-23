@@ -2347,33 +2347,6 @@ body.dark-mode .mode-btn.active{
   color:#f1f3f5 !important;
   -webkit-text-fill-color:#f1f3f5 !important;
 }
-
-/* =========================================================
-   REDSYNC — REQUEST FORM TEXT CONTRAST
-   ========================================================= */
-
-#hospitalView #reqHospital,
-#hospitalView #reqUnits,
-#hospitalView #reqBlood,
-#hospitalView #reqUrgency{
-  color:#f5f7fa !important;
-  -webkit-text-fill-color:#f5f7fa !important;
-  caret-color:#f5f7fa !important;
-}
-
-#hospitalView #reqHospital:focus,
-#hospitalView #reqUnits:focus,
-#hospitalView #reqBlood:focus,
-#hospitalView #reqUrgency:focus{
-  color:#ffffff !important;
-  -webkit-text-fill-color:#ffffff !important;
-}
-
-#hospitalView #reqHospital::placeholder{
-  color:#858b94 !important;
-  -webkit-text-fill-color:#858b94 !important;
-  opacity:1 !important;
-}
 </style>
 <style>
 /* =========================================================
@@ -3621,191 +3594,7 @@ body.dark-mode .hospital-request-meta span{
   background:#20252c;
   color:#a5abb4;
 }
-</style><style id="request-form-final-contrast">
-/* FINAL REQUEST FORM TEXT VISIBILITY FIX */
-
-#hospitalView #reqHospital,
-#hospitalView #reqUnits,
-#hospitalView #reqBlood,
-#hospitalView #reqUrgency {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  opacity: 1 !important;
-  text-shadow: none !important;
-  caret-color: #ffffff !important;
-}
-
-#hospitalView #reqHospital:focus,
-#hospitalView #reqUnits:focus,
-#hospitalView #reqBlood:focus,
-#hospitalView #reqUrgency:focus {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-  opacity: 1 !important;
-}
-
-#hospitalView #reqHospital::placeholder {
-  color: #858b94 !important;
-  -webkit-text-fill-color: #858b94 !important;
-  opacity: 1 !important;
-}
-
-#hospitalView #reqBlood option,
-#hospitalView #reqUrgency option {
-  color: #ffffff !important;
-  background: #101419 !important;
-}
-</style>
-<style id="request-form-color-final">
-#hospitalView input#reqHospital,
-#hospitalView input#reqUnits,
-#hospitalView select#reqBlood,
-#hospitalView select#reqUrgency{
-  color:rgb(255,255,255) !important;
-  background:#101419 !important;
-  opacity:1 !important;
-}
-
-#hospitalView input#reqHospital:focus,
-#hospitalView input#reqUnits:focus,
-#hospitalView select#reqBlood:focus,
-#hospitalView select#reqUrgency:focus{
-  color:rgb(255,255,255) !important;
-  background:#101419 !important;
-}
-
-#hospitalView input#reqHospital::placeholder{
-  color:#858b94 !important;
-  opacity:1 !important;
-}
-
-#hospitalView select#reqBlood option,
-#hospitalView select#reqUrgency option{
-  color:#ffffff !important;
-  background:#101419 !important;
-}
-</style>
-<style id="text-input-visibility-final">
-input[type="text"],
-input[type="tel"],
-input[type="number"],
-input:not([type]),
-textarea{
-  color:#ffffff !important;
-  -webkit-text-fill-color:#ffffff !important;
-  opacity:1 !important;
-  caret-color:#ffffff !important;
-}
-
-input[type="text"]:focus,
-input[type="tel"]:focus,
-input[type="number"]:focus,
-input:not([type]):focus,
-textarea:focus{
-  color:#ffffff !important;
-  -webkit-text-fill-color:#ffffff !important;
-  opacity:1 !important;
-}
-
-input[type="text"]::placeholder,
-input[type="tel"]::placeholder,
-input[type="number"]::placeholder,
-input:not([type])::placeholder,
-textarea::placeholder{
-  color:#858b94 !important;
-  -webkit-text-fill-color:#858b94 !important;
-  opacity:1 !important;
-}
-</style>
-<style id="req-hospital-final-fix">
-#hospitalView #reqHospital{
-  color:#ffffff !important;
-  -webkit-text-fill-color:#ffffff !important;
-  background:#101419 !important;
-  opacity:1 !important;
-  caret-color:#ffffff !important;
-}
-
-#hospitalView #reqHospital:focus{
-  color:#ffffff !important;
-  -webkit-text-fill-color:#ffffff !important;
-  background:#101419 !important;
-  opacity:1 !important;
-}
-
-#hospitalView #reqHospital::placeholder{
-  color:#858b94 !important;
-  -webkit-text-fill-color:#858b94 !important;
-  opacity:1 !important;
-}
-
-/* =========================================================
-   REDSYNC — FORM AUTOFILL / TEXT VISIBILITY FIX
-   ========================================================= */
-
-#hospitalView #reqHospital,
-#hospitalView #reqHospital:focus,
-#hospitalView #reqHospital:-webkit-autofill,
-#hospitalView #reqHospital:-webkit-autofill:hover,
-#hospitalView #reqHospital:-webkit-autofill:focus,
-#donorView input:-webkit-autofill,
-#donorView input:-webkit-autofill:hover,
-#donorView input:-webkit-autofill:focus{
-  -webkit-text-fill-color:#ffffff !important;
-  color:#ffffff !important;
-  caret-color:#ffffff !important;
-  -webkit-box-shadow:0 0 0 1000px #101419 inset !important;
-  box-shadow:0 0 0 1000px #101419 inset !important;
-  background-color:#101419 !important;
-  transition:background-color 9999s ease-out 0s !important;
-}
-
-/* =========================================================
-   REDSYNC — GLOBAL FORM TEXT / AUTOFILL VISIBILITY FIX
-   Applies to donor + hospital + lookup + request forms
-   ========================================================= */
-
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active,
-textarea:-webkit-autofill,
-textarea:-webkit-autofill:hover,
-textarea:-webkit-autofill:focus,
-select:-webkit-autofill,
-select:-webkit-autofill:hover,
-select:-webkit-autofill:focus{
-  -webkit-text-fill-color:#ffffff !important;
-  color:#ffffff !important;
-  caret-color:#ffffff !important;
-  -webkit-box-shadow:0 0 0 1000px #101419 inset !important;
-  box-shadow:0 0 0 1000px #101419 inset !important;
-  background-color:#101419 !important;
-  transition:background-color 9999s ease-out 0s !important;
-}
-
-input,
-textarea,
-select{
-  color:#ffffff !important;
-  caret-color:#ffffff !important;
-}
-
-input:focus,
-textarea:focus,
-select:focus{
-  color:#ffffff !important;
-  -webkit-text-fill-color:#ffffff !important;
-  caret-color:#ffffff !important;
-}
-
-input::placeholder,
-textarea::placeholder{
-  color:#777d85;
-  opacity:1;
-}
-</style>
-</head>
+</style></head>
 <body>
 
 <header>
@@ -3843,22 +3632,6 @@ const BLOOD_GROUPS = ["O-","O+","A-","A+","B-","B+","AB-","AB+"];
 const DEFAULT_LAT = 12.9716, DEFAULT_LNG = 77.5946; // Bengaluru default for demo
 
 let mode = "donor";
-
-/* Prevent background refresh from rebuilding a request form
-   while the hospital is actively filling it. */
-window.requestFormDirty = false;
-
-document.addEventListener("input", (event) => {
-  if(event.target.closest("#hospitalView #reqHospital, #hospitalView #reqUnits")){
-    window.requestFormDirty = true;
-  }
-});
-
-document.addEventListener("change", (event) => {
-  if(event.target.closest("#hospitalView #reqBlood, #hospitalView #reqUrgency")){
-    window.requestFormDirty = true;
-  }
-});
 let currentDonorId = localStorage.getItem("hemolink_donor_id") || null;
 let cache = { donors: [], requests: [], acceptancesByRequest: {}, donorAcceptances: [] };
 
@@ -4020,16 +3793,8 @@ async function refreshAll(){
 
   if(interacting && !window.justSwitchedMode) return;
 
-  /* Never destroy a hospital request form that the user has started filling. */
-  if(mode==="hospital" && window.requestFormDirty && !window.justSwitchedMode){
-    return;
-  }
-
   if(mode==="donor") renderDonorView();
   else renderHospitalView();
-
-  /* Mode switch has now been handled. */
-  window.justSwitchedMode = false;
 }
 
 /* ============== DONOR VIEW ============== */
@@ -5178,10 +4943,6 @@ async function createRequest(){
     })});
     toast("Request created â€” matching donors now");
     flashPulse();
-
-    /* Request submitted successfully, so the form can be rebuilt. */
-    window.requestFormDirty = false;
-
     await refreshAll();
   }catch(e){ toast(e.message); }
 }
@@ -5230,17 +4991,6 @@ setInterval(()=>{
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
 
 
 
