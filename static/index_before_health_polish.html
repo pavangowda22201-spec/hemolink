@@ -2216,106 +2216,6 @@ body.dark-mode .mode-btn.active{
     grid-template-columns:1fr;
   }
 }
-
-/* =========================================================
-   REDSYNC — HEALTH PROFILE POLISH
-   ========================================================= */
-
-.hospital-donor-health{
-  margin-top:14px;
-  padding:18px;
-  border:1px solid rgba(215,25,45,.18);
-  border-radius:14px;
-  background:
-    linear-gradient(145deg,rgba(215,25,45,.055),rgba(255,255,255,.018)),
-    #0d1014;
-  box-shadow:0 10px 30px rgba(0,0,0,.18);
-}
-
-.hospital-health-title{
-  display:flex;
-  align-items:center;
-  gap:9px;
-  margin-bottom:14px;
-  font-size:12px;
-  font-weight:800;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:#f1f3f5;
-}
-
-.hospital-health-title::before{
-  content:"♥";
-  display:grid;
-  place-items:center;
-  width:25px;
-  height:25px;
-  border-radius:7px;
-  background:rgba(215,25,45,.12);
-  color:#d71920;
-  font-size:13px;
-}
-
-.hospital-health-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-}
-
-.hospital-health-grid > div{
-  min-width:0;
-  padding:12px 13px;
-  border:1px solid rgba(255,255,255,.065);
-  border-radius:10px;
-  background:rgba(255,255,255,.025);
-  transition:border-color .18s ease,background .18s ease;
-}
-
-.hospital-health-grid > div:hover{
-  border-color:rgba(215,25,45,.22);
-  background:rgba(215,25,45,.035);
-}
-
-.hospital-health-grid span{
-  display:block;
-  margin-bottom:5px;
-  font-size:9px;
-  font-weight:700;
-  color:#737982;
-  text-transform:uppercase;
-  letter-spacing:.07em;
-}
-
-.hospital-health-grid strong{
-  display:block;
-  font-size:12px;
-  line-height:1.5;
-  color:#f1f3f5;
-  font-weight:600;
-  word-break:break-word;
-}
-
-.hospital-health-grid strong.health-positive{
-  color:#ff6b72;
-}
-
-.hospital-health-grid strong.health-clear{
-  color:#a9b0b8;
-}
-
-.hospital-health-updated{
-  margin-top:12px;
-  padding-top:10px;
-  border-top:1px solid rgba(255,255,255,.05);
-  font-size:10px;
-  color:#666c74;
-}
-
-@media(max-width:640px){
-  .hospital-health-grid{
-    grid-template-columns:1fr;
-  }
-}
 </style>
 <style>
 /* =========================================================
@@ -4726,32 +4626,32 @@ function renderHospitalView(){
 
                                   <div>
                                     <span>Smoking / tobacco</span>
-                                    <strong>${d.smoking_tobacco ? `<span class="health-positive">Yes</span>` : `<span class="health-clear">No</span>`}</strong>
+                                    <strong>${d.smoking_tobacco ? "Yes" : "No"}</strong>
                                   </div>
 
                                   <div>
                                     <span>Alcohol use</span>
-                                    <strong>${d.alcohol_use ? `<span class="health-positive">Yes</span>` : `<span class="health-clear">No</span>`}</strong>
+                                    <strong>${d.alcohol_use ? "Yes" : "No"}</strong>
                                   </div>
 
                                   <div>
                                     <span>Previous illnesses</span>
-                                    <strong>${d.previous_illnesses || `<span class="health-clear">None reported</span>`}</strong>
+                                    <strong>${d.previous_illnesses || "None reported"}</strong>
                                   </div>
 
                                   <div>
                                     <span>Diseases</span>
-                                    <strong>${d.diseases || `<span class="health-clear">None reported</span>`}</strong>
+                                    <strong>${d.diseases || "None reported"}</strong>
                                   </div>
 
                                   <div>
                                     <span>Medications</span>
-                                    <strong>${d.medications || `<span class="health-clear">None reported</span>`}</strong>
+                                    <strong>${d.medications || "None reported"}</strong>
                                   </div>
 
                                   <div>
                                     <span>Medical history</span>
-                                    <strong>${d.medical_history || `<span class="health-clear">None reported</span>`}</strong>
+                                    <strong>${d.medical_history || "None reported"}</strong>
                                   </div>
 
                                 </div>
@@ -4960,8 +4860,6 @@ setInterval(()=>{
 </script>
 </body>
 </html>
-
-
 
 
 
