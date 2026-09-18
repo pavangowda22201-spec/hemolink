@@ -4,17 +4,19 @@ RUN LOCATION: Imported by routers/*.py — not run directly.
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.models import BloodGroup, UrgencyLevel, RequestStatus, AcceptanceStatus
 
 
 class DonorCreate(BaseModel):
-    name: str
-    phone: str
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    name: str = Field(min_length=1, max_length=120)
+    phone: str = Field(min_length=6, max_length=32)
     blood_group: BloodGroup
-    latitude: float
-    longitude: float
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
 
 
 class DonorOut(BaseModel):
@@ -34,14 +36,16 @@ class DonorOut(BaseModel):
 
 
 class RequestCreate(BaseModel):
-    hospital_name: str
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    hospital_name: str = Field(min_length=2, max_length=160)
     blood_group_needed: BloodGroup
-    units_needed: int = 1
+    units_needed: int = Field(default=1, ge=1, le=100)
     urgency: UrgencyLevel
-    latitude: float
-    longitude: float
-    eta_window_minutes: int = 45
-    notes: Optional[str] = None
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    eta_window_minutes: int = Field(default=45, ge=5, le=1440)
+    notes: Optional[str] = Field(default=None, max_length=2000)
 
 
 class RequestOut(BaseModel):
@@ -53,7 +57,11 @@ class RequestOut(BaseModel):
     units_needed: int
     urgency: UrgencyLevel
     status: RequestStatus
+    latitude: float
+    longitude: float
     current_radius_km: float
+    eta_window_minutes: int
+    notes: Optional[str] = None
     created_at: datetime
     fulfilled_at: Optional[datetime] = None
 
@@ -63,6 +71,18 @@ class CandidateOut(BaseModel):
     donor_name: str
     distance_km: float
     score: float
+
+
+class RequestMatchOut(BaseModel):
+    """Privacy-minimized candidate data for the hospital workspace."""
+
+    donor_label: str
+    blood_group: BloodGroup
+    distance_km: float
+    score: float
+    reliability_score: float
+    is_verified: bool
+    is_available: bool
 
 
 class AcceptanceOut(BaseModel):

@@ -8,11 +8,25 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.models import BloodRequest, Acceptance
-from app.schemas.schemas import RequestCreate, RequestOut, CandidateOut, AcceptanceOut
-from app.services.matching_engine import match_request
+from app.schemas.schemas import (
+    RequestCreate,
+    RequestOut,
+    CandidateOut,
+    RequestMatchOut,
+    AcceptanceOut,
+)
+from app.services.matching_engine import find_candidates_at_radius, match_request
 from app.services.notification_service import notify_candidates
 
 router = APIRouter(prefix="/requests", tags=["requests"])
+
+
+def _redact_donor_name(name: str) -> str:
+    """Return a useful but privacy-minimized donor label for hospital matching."""
+    parts = [part for part in name.split() if part]
+    if not parts:
+        return "Verified donor"
+    return " ".join(f"{part[0].upper()}\u2022\u2022\u2022" for part in parts[:2])
 
 
 @router.get("/", response_model=List[RequestOut])
@@ -25,6 +39,31 @@ def list_requests(db: Session = Depends(get_db)):
 def get_request_acceptances(request_id: str, db: Session = Depends(get_db)):
     """Returns every donor acceptance (pending, fulfilled, stood down, no-show) for a request."""
     return db.query(Acceptance).filter(Acceptance.request_id == request_id).all()
+
+
+@router.get("/{request_id}/matches", response_model=List[RequestMatchOut])
+def get_request_matches(request_id: str, db: Session = Depends(get_db)):
+    """
+    Returns the current eligible donor pool at the request's already-selected
+    search radius. This is read-only: it does not re-notify donors or rematch.
+    """
+    request = db.query(BloodRequest).filter(BloodRequest.id == request_id).first()
+    if not request:
+        raise HTTPException(status_code=404, detail="Request not found.")
+
+    candidates = find_candidates_at_radius(db, request, request.current_radius_km)
+    return [
+        RequestMatchOut(
+            donor_label=_redact_donor_name(candidate.donor.name),
+            blood_group=candidate.donor.blood_group,
+            distance_km=candidate.distance_km,
+            score=candidate.score,
+            reliability_score=candidate.donor.reliability_score,
+            is_verified=candidate.donor.is_verified,
+            is_available=candidate.donor.is_available,
+        )
+        for candidate in candidates
+    ]
 
 
 @router.post("/", response_model=RequestOut)
