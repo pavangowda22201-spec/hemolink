@@ -3761,6 +3761,80 @@ textarea::placeholder{
 }
 
 /* =========================================================
+   REDSYNC — DONOR INPUT BACKGROUND FINAL FIX
+   ========================================================= */
+
+#donorView input,
+#donorView select,
+#donorView textarea{
+  background:#101419 !important;
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+  caret-color:#ffffff !important;
+  border-color:rgba(255,255,255,.12) !important;
+}
+
+#donorView input:focus,
+#donorView select:focus,
+#donorView textarea:focus{
+  background:#101419 !important;
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+}
+
+#donorView input:-webkit-autofill,
+#donorView input:-webkit-autofill:hover,
+#donorView input:-webkit-autofill:focus,
+#donorView input:-webkit-autofill:active{
+  background:#101419 !important;
+  background-color:#101419 !important;
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+  -webkit-box-shadow:0 0 0 1000px #101419 inset !important;
+  box-shadow:0 0 0 1000px #101419 inset !important;
+}
+/* =========================================================
+   REDSYNC — DONOR FORM TEXT VISIBILITY FINAL OVERRIDE
+   ========================================================= */
+
+#donorView input,
+#donorView input:focus,
+#donorView input:active,
+#donorView select,
+#donorView select:focus,
+#donorView textarea,
+#donorView textarea:focus{
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+  caret-color:#ffffff !important;
+  opacity:1 !important;
+}
+
+#donorView input:-webkit-autofill,
+#donorView input:-webkit-autofill:hover,
+#donorView input:-webkit-autofill:focus,
+#donorView input:-webkit-autofill:active{
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+  caret-color:#ffffff !important;
+  opacity:1 !important;
+  -webkit-box-shadow:0 0 0 1000px #101419 inset !important;
+  box-shadow:0 0 0 1000px #101419 inset !important;
+  background-color:#101419 !important;
+}
+
+#donorView input::placeholder,
+#donorView textarea::placeholder{
+  color:#9da5ae !important;
+  -webkit-text-fill-color:#9da5ae !important;
+  opacity:1 !important;
+}
+
+#donorView select option{
+  color:#ffffff !important;
+  background:#101419 !important;
+}
+/* =========================================================
    REDSYNC — GLOBAL FORM TEXT / AUTOFILL VISIBILITY FIX
    Applies to donor + hospital + lookup + request forms
    ========================================================= */
@@ -5230,6 +5304,8 @@ setInterval(()=>{
 </script>
 </body>
 </html>
+
+
 
 
 
