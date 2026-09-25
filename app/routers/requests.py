@@ -9,7 +9,13 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.models.models import BloodRequest, Acceptance, User, UserType
+from app.models.models import (
+    BloodRequest,
+    Acceptance,
+    RequestStatus,
+    User,
+    UserType,
+)
 from app.schemas.schemas import (
     RequestCreate,
     RequestOut,
@@ -123,6 +129,57 @@ def create_request(
 
     candidates = match_request(db, request)
     notify_candidates(db, request, candidates)
+
+    return request
+
+
+@router.post("/{request_id}/cancel", response_model=RequestOut)
+def cancel_request(
+    request_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Allows only the hospital that created the request to cancel it.
+    Cancellation stops further matching/escalation.
+    """
+
+    if current_user.user_type != UserType.HOSPITAL:
+        raise HTTPException(
+            status_code=403,
+            detail="Hospital account required.",
+        )
+
+    request = db.query(BloodRequest).filter(
+        BloodRequest.id == request_id
+    ).first()
+
+    if not request:
+        raise HTTPException(
+            status_code=404,
+            detail="Request not found.",
+        )
+
+    if request.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="You can only cancel your own hospital requests.",
+        )
+
+    if request.status in (
+        RequestStatus.FULFILLED,
+        RequestStatus.EXPIRED,
+        RequestStatus.CANCELLED,
+    ):
+        raise HTTPException(
+            status_code=409,
+            detail=f"Request is already {request.status.value}.",
+        )
+
+    request.status = RequestStatus.CANCELLED
+
+    db.commit()
+    db.refresh(request)
 
     return request
 
