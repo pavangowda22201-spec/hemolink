@@ -56,6 +56,7 @@ class Donor(Base):
     __tablename__ = "donors"
 
     id = Column(String, primary_key=True, default=gen_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True, unique=True)
     name = Column(String, nullable=False)
     phone = Column(String, nullable=False, unique=True)
     blood_group = Column(Enum(BloodGroup), nullable=False)
@@ -90,6 +91,7 @@ class BloodRequest(Base):
     __tablename__ = "blood_requests"
 
     id = Column(String, primary_key=True, default=gen_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True, unique=True)
     hospital_name = Column(String, nullable=False)
     blood_group_needed = Column(Enum(BloodGroup), nullable=False)
     units_needed = Column(Integer, default=1)
@@ -119,6 +121,7 @@ class Acceptance(Base):
     __tablename__ = "acceptances"
 
     id = Column(String, primary_key=True, default=gen_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True, unique=True)
     request_id = Column(String, ForeignKey("blood_requests.id"), nullable=False)
     donor_id = Column(String, ForeignKey("donors.id"), nullable=False)
 
@@ -137,6 +140,7 @@ class NotificationLog(Base):
     __tablename__ = "notification_logs"
 
     id = Column(String, primary_key=True, default=gen_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True, unique=True)
     request_id = Column(String, ForeignKey("blood_requests.id"), nullable=False)
     donor_id = Column(String, ForeignKey("donors.id"), nullable=False)
     radius_tier_km = Column(Float, nullable=False)
@@ -152,10 +156,6 @@ class UserType(str, enum.Enum):
 class User(Base):
     """
     HemoLink authentication account.
-
-    This is intentionally separate from Donor for now.
-    The existing donor/request system remains unchanged until
-    authentication has been verified.
     """
     __tablename__ = "users"
 
