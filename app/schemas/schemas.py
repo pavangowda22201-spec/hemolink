@@ -70,14 +70,21 @@ class RequestOut(BaseModel):
     id: str
     hospital_name: str
     blood_group_needed: BloodGroup
+
     units_needed: int
+    fulfilled_units: int
+
     urgency: UrgencyLevel
     status: RequestStatus
+
     latitude: float
     longitude: float
+
     current_radius_km: float
     eta_window_minutes: int
+
     notes: Optional[str] = None
+
     created_at: datetime
     fulfilled_at: Optional[datetime] = None
 
@@ -107,6 +114,9 @@ class AcceptanceOut(BaseModel):
     id: str
     request_id: str
     donor_id: str
+
+    units_fulfilled: int
+
     status: AcceptanceStatus
     accepted_at: datetime
     eta_deadline: datetime
