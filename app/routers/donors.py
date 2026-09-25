@@ -1,17 +1,20 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.models import Donor, User, UserType
-from app.schemas.schemas import DonorCreate, DonorOut, DonorUpdate
+from app.schemas.schemas import (
+    DonorCreate,
+    DonorOut,
+    DonorUpdate,
+    DonorLocationUpdate,
+)
 
 router = APIRouter(prefix="/donors", tags=["donors"])
 
 
-@router.get("/", response_model=List[DonorOut])
+@router.get("/", response_model=list[DonorOut])
 def list_donors(db: Session = Depends(get_db)):
     return db.query(Donor).order_by(Donor.created_at.desc()).all()
 
@@ -165,6 +168,37 @@ def update_my_availability(
     return donor
 
 
+@router.patch("/me/location", response_model=DonorOut)
+def update_my_location(
+    payload: DonorLocationUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if current_user.user_type != UserType.DONOR:
+        raise HTTPException(
+            status_code=403,
+            detail="Donor account required.",
+        )
+
+    donor = db.query(Donor).filter(
+        Donor.user_id == current_user.id
+    ).first()
+
+    if not donor:
+        raise HTTPException(
+            status_code=404,
+            detail="Donor profile not created yet.",
+        )
+
+    donor.latitude = payload.latitude
+    donor.longitude = payload.longitude
+
+    db.commit()
+    db.refresh(donor)
+
+    return donor
+
+
 @router.post("/", response_model=DonorOut)
 def register_donor(
     payload: DonorCreate,
@@ -180,50 +214,15 @@ def register_donor(
             detail="A donor with this phone number already exists.",
         )
 
-    donor = Donor(**payload.dict())
+    donor = Donor(
+        name=payload.name,
+        phone=payload.phone,
+        blood_group=payload.blood_group,
+        latitude=payload.latitude,
+        longitude=payload.longitude,
+    )
 
     db.add(donor)
-    db.commit()
-    db.refresh(donor)
-
-    return donor
-
-
-@router.get("/{donor_id}", response_model=DonorOut)
-def get_donor(
-    donor_id: str,
-    db: Session = Depends(get_db),
-):
-    donor = db.query(Donor).filter(
-        Donor.id == donor_id
-    ).first()
-
-    if not donor:
-        raise HTTPException(
-            status_code=404,
-            detail="Donor not found.",
-        )
-
-    return donor
-
-
-@router.post("/{donor_id}/verify", response_model=DonorOut)
-def verify_donor(
-    donor_id: str,
-    db: Session = Depends(get_db),
-):
-    donor = db.query(Donor).filter(
-        Donor.id == donor_id
-    ).first()
-
-    if not donor:
-        raise HTTPException(
-            status_code=404,
-            detail="Donor not found.",
-        )
-
-    donor.is_verified = True
-
     db.commit()
     db.refresh(donor)
 

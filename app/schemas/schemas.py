@@ -33,7 +33,12 @@ class DonorUpdate(BaseModel):
     blood_group: BloodGroup
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
+    
+class DonorLocationUpdate(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
 
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
 
 class DonorOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
