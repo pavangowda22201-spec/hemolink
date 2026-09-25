@@ -64,6 +64,7 @@ class Donor(Base):
     __tablename__ = "donors"
 
     id = Column(String, primary_key=True, default=gen_uuid)
+
     user_id = Column(
         String,
         ForeignKey("users.id"),
@@ -166,11 +167,11 @@ class Acceptance(Base):
 
     id = Column(String, primary_key=True, default=gen_uuid)
 
+    # A user can have many acceptance records over time.
     user_id = Column(
         String,
         ForeignKey("users.id"),
         nullable=True,
-        unique=True,
     )
 
     request_id = Column(
@@ -223,11 +224,11 @@ class NotificationLog(Base):
 
     id = Column(String, primary_key=True, default=gen_uuid)
 
+    # A user can have many notification records.
     user_id = Column(
         String,
         ForeignKey("users.id"),
         nullable=True,
-        unique=True,
     )
 
     request_id = Column(
