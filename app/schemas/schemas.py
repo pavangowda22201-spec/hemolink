@@ -1,15 +1,31 @@
 """
 RUN LOCATION: Imported by routers/*.py — not run directly.
 """
+
 from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.models.models import BloodGroup, UrgencyLevel, RequestStatus, AcceptanceStatus
+from app.models.models import (
+    BloodGroup,
+    UrgencyLevel,
+    RequestStatus,
+    AcceptanceStatus,
+)
 
 
 class DonorCreate(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    name: str = Field(min_length=1, max_length=120)
+    phone: str = Field(min_length=6, max_length=32)
+    blood_group: BloodGroup
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+
+
+class DonorUpdate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
     name: str = Field(min_length=1, max_length=120)

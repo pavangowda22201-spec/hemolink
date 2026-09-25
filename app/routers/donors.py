@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.models import Donor, User, UserType
-from app.schemas.schemas import DonorCreate, DonorOut
+from app.schemas.schemas import DonorCreate, DonorOut, DonorUpdate
 
 router = APIRouter(prefix="/donors", tags=["donors"])
 
@@ -27,7 +27,9 @@ def get_my_donor_profile(
             detail="Donor account required.",
         )
 
-    donor = db.query(Donor).filter(Donor.user_id == current_user.id).first()
+    donor = db.query(Donor).filter(
+        Donor.user_id == current_user.id
+    ).first()
 
     if not donor:
         raise HTTPException(
@@ -82,6 +84,51 @@ def create_my_donor_profile(
     )
 
     db.add(donor)
+    db.commit()
+    db.refresh(donor)
+
+    return donor
+
+
+@router.put("/me", response_model=DonorOut)
+def update_my_donor_profile(
+    payload: DonorUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if current_user.user_type != UserType.DONOR:
+        raise HTTPException(
+            status_code=403,
+            detail="Donor account required.",
+        )
+
+    donor = db.query(Donor).filter(
+        Donor.user_id == current_user.id
+    ).first()
+
+    if not donor:
+        raise HTTPException(
+            status_code=404,
+            detail="Donor profile not created yet.",
+        )
+
+    existing_phone = db.query(Donor).filter(
+        Donor.phone == payload.phone,
+        Donor.id != donor.id,
+    ).first()
+
+    if existing_phone:
+        raise HTTPException(
+            status_code=409,
+            detail="A donor with this phone number already exists.",
+        )
+
+    donor.name = payload.name
+    donor.phone = payload.phone
+    donor.blood_group = payload.blood_group
+    donor.latitude = payload.latitude
+    donor.longitude = payload.longitude
+
     db.commit()
     db.refresh(donor)
 
