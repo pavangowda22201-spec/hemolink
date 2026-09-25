@@ -33,12 +33,14 @@ class DonorUpdate(BaseModel):
     blood_group: BloodGroup
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
-    
+
+
 class DonorLocationUpdate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
     latitude: float = Field(ge=-90, le=90)
     longitude: float = Field(ge=-180, le=180)
+
 
 class DonorOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -126,3 +128,23 @@ class AcceptanceOut(BaseModel):
     accepted_at: datetime
     eta_deadline: datetime
     resolved_at: Optional[datetime] = None
+
+
+class DonorTrackingOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    donor_id: str
+    donor_name: str
+    latitude: float
+    longitude: float
+    status: AcceptanceStatus
+    accepted_at: datetime
+    eta_deadline: datetime
+    resolved_at: Optional[datetime] = None
+
+
+class RequestTrackingOut(BaseModel):
+    request_id: str
+    hospital_latitude: float
+    hospital_longitude: float
+    donors: list[DonorTrackingOut]

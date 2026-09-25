@@ -12,6 +12,7 @@ from app.dependencies import get_current_user
 from app.models.models import (
     BloodRequest,
     Acceptance,
+    AcceptanceStatus,
     RequestStatus,
     User,
     UserType,
@@ -22,6 +23,8 @@ from app.schemas.schemas import (
     CandidateOut,
     RequestMatchOut,
     AcceptanceOut,
+    RequestTrackingOut,
+    DonorTrackingOut,
 )
 from app.services.matching_engine import find_candidates_at_radius, match_request
 from app.services.notification_service import notify_candidates
@@ -43,15 +46,101 @@ def list_requests(db: Session = Depends(get_db)):
     return db.query(BloodRequest).order_by(BloodRequest.created_at.desc()).all()
 
 
-@router.get("/{request_id}/acceptances", response_model=List[AcceptanceOut])
+@router.get(
+    "/{request_id}/acceptances",
+    response_model=List[AcceptanceOut],
+)
 def get_request_acceptances(
     request_id: str,
     db: Session = Depends(get_db),
 ):
-    """Returns every donor acceptance (pending, fulfilled, stood down, no-show) for a request."""
+    """Returns every donor acceptance for a request."""
     return db.query(Acceptance).filter(
         Acceptance.request_id == request_id
     ).all()
+
+
+@router.get(
+    "/{request_id}/tracking",
+    response_model=RequestTrackingOut,
+)
+def get_request_tracking(
+    request_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns the current locations of donors who have accepted a hospital's
+    blood request.
+
+    Only the hospital that created the request can access this endpoint.
+    Donor coordinates are intentionally exposed only through this
+    request-specific tracking endpoint.
+    """
+
+    if current_user.user_type != UserType.HOSPITAL:
+        raise HTTPException(
+            status_code=403,
+            detail="Hospital account required.",
+        )
+
+    request = (
+        db.query(BloodRequest)
+        .filter(
+            BloodRequest.id == request_id,
+            BloodRequest.user_id == current_user.id,
+        )
+        .first()
+    )
+
+    if not request:
+        raise HTTPException(
+            status_code=404,
+            detail="Request not found for this hospital.",
+        )
+
+    acceptances = (
+        db.query(Acceptance)
+        .filter(
+            Acceptance.request_id == request.id,
+            Acceptance.status.in_(
+                [
+                    AcceptanceStatus.PENDING,
+                    AcceptanceStatus.FULFILLED,
+                ]
+            ),
+        )
+        .order_by(Acceptance.accepted_at.asc())
+        .all()
+    )
+
+    donors = []
+
+    for acceptance in acceptances:
+        donor = acceptance.donor
+
+        if not donor:
+            continue
+
+        donors.append(
+            DonorTrackingOut(
+                donor_id=donor.id,
+                donor_name=_redact_donor_name(donor.name),
+                latitude=donor.latitude,
+                longitude=donor.longitude,
+                status=acceptance.status,
+                accepted_at=acceptance.accepted_at,
+                eta_deadline=acceptance.eta_deadline,
+                resolved_at=acceptance.resolved_at,
+            )
+        )
+
+    return RequestTrackingOut(
+        request_id=request.id,
+        hospital_latitude=request.latitude,
+        hospital_longitude=request.longitude,
+        donors=donors,
+    )
 
 
 @router.get("/{request_id}/matches", response_model=List[RequestMatchOut])
@@ -211,6 +300,7 @@ def rematch_request(
     Manually re-run matching for a request (e.g. after a no-show leaves it
     still unfulfilled). Notifies any newly found candidates.
     """
+
     request = db.query(BloodRequest).filter(
         BloodRequest.id == request_id
     ).first()
