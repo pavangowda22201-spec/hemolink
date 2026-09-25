@@ -124,7 +124,9 @@ class BloodRequest(Base):
 
     hospital_name = Column(String, nullable=False)
     blood_group_needed = Column(Enum(BloodGroup), nullable=False)
+
     units_needed = Column(Integer, default=1)
+    fulfilled_units = Column(Integer, default=0, nullable=False)
 
     urgency = Column(Enum(UrgencyLevel), nullable=False)
     status = Column(
@@ -158,9 +160,9 @@ class Acceptance(Base):
     A donor's acceptance of a request.
 
     Multiple donors can hold a PENDING acceptance on the same
-    request simultaneously. The first donor to complete the
-    donation currently fulfills the request and other pending
-    donors are stood down.
+    request simultaneously. Multi-unit requests can be fulfilled
+    by multiple donors, with each acceptance tracking its
+    contributed units.
     """
 
     __tablename__ = "acceptances"
@@ -185,6 +187,8 @@ class Acceptance(Base):
         ForeignKey("donors.id"),
         nullable=False,
     )
+
+    units_fulfilled = Column(Integer, default=1, nullable=False)
 
     status = Column(
         Enum(AcceptanceStatus),
