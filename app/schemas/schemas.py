@@ -129,6 +129,11 @@ class AcceptanceOut(BaseModel):
     eta_deadline: datetime
     resolved_at: Optional[datetime] = None
 
+class DonorActiveRequestOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    request: RequestOut
+    acceptance: AcceptanceOut
 
 class DonorTrackingOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
