@@ -142,3 +142,41 @@ class NotificationLog(Base):
     radius_tier_km = Column(Float, nullable=False)
     message = Column(Text, nullable=False)
     sent_at = Column(DateTime, default=datetime.utcnow)
+
+class UserType(str, enum.Enum):
+    DONOR = "donor"
+    HOSPITAL = "hospital"
+    ADMIN = "admin"
+
+
+class User(Base):
+    """
+    HemoLink authentication account.
+
+    This is intentionally separate from Donor for now.
+    The existing donor/request system remains unchanged until
+    authentication has been verified.
+    """
+    __tablename__ = "users"
+
+    id = Column(String, primary_key=True, default=gen_uuid)
+
+    email = Column(String, nullable=True, unique=True)
+    phone = Column(String, nullable=True, unique=True)
+
+    password_hash = Column(String, nullable=False)
+
+    user_type = Column(
+        Enum(UserType),
+        nullable=False,
+        default=UserType.DONOR,
+    )
+
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+    )
