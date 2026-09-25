@@ -1,11 +1,15 @@
 """
 RUN LOCATION: Imported by routers/requests.py — not run directly.
+
 Sends (and logs) notifications to candidate donors.
 
 The actual SMS/push send is stubbed — swap send_sms/send_push
 for a real provider (Twilio, FCM, etc.) when you're ready to go live.
 
 A fulfilled request must never generate new donor notifications.
+
+A donor is notified at most once per request. When the matching radius
+expands, only newly discovered donors are notified.
 """
 
 from typing import List
@@ -36,8 +40,25 @@ def _build_message(request: BloodRequest, dist_km: float) -> str:
 
 
 def send_sms(phone: str, message: str) -> None:
-    """STUB — wire up a real SMS provider (e.g. Twilio) here."""
+    """STUB — wire up a real SMS provider (e.g. Twilio, FCM) here."""
     print(f"[SMS -> {phone}] {message}")
+
+
+def _already_notified(
+    db: Session,
+    request_id: str,
+    donor_id: str,
+) -> bool:
+    """Return True if this donor has already been notified for this request."""
+    return (
+        db.query(NotificationLog)
+        .filter(
+            NotificationLog.request_id == request_id,
+            NotificationLog.donor_id == donor_id,
+        )
+        .first()
+        is not None
+    )
 
 
 def notify_candidates(
@@ -49,8 +70,13 @@ def notify_candidates(
     Notify eligible candidate donors and write audit logs.
 
     A fully fulfilled request is closed to new donor notifications.
+
     Partially fulfilled requests may continue notifying donors for
     their remaining units.
+
+    A donor is notified only once for a given request, so radius
+    expansion does not duplicate notifications to donors who were
+    already contacted at a smaller radius.
     """
 
     if request.status == RequestStatus.FULFILLED:
@@ -65,6 +91,13 @@ def notify_candidates(
         return
 
     for candidate in candidates:
+        if _already_notified(
+            db,
+            request.id,
+            candidate.donor.id,
+        ):
+            continue
+
         message = _build_message(
             request,
             candidate.distance_km,
