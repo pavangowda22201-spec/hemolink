@@ -65,3 +65,11 @@ def ensure_acceptance_user_id_column():
                 "ADD COLUMN IF NOT EXISTS user_id VARCHAR"
             )
         )
+
+        connection.execute(
+            text(
+                "ALTER TABLE acceptances "
+                "ADD COLUMN IF NOT EXISTS units_fulfilled "
+                "INTEGER NOT NULL DEFAULT 1"
+            )
+        )
