@@ -1,15 +1,22 @@
 """
 RUN LOCATION: Run this file from the project root (the "hemolink" folder) to start the API server.
+
     cd hemolink
     uvicorn main:app --reload
 
 Once running, open http://localhost:8000/docs for interactive API docs.
 """
+
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.database import Base, engine, ensure_donor_user_id_column
+from app.database import (
+    Base,
+    engine,
+    ensure_donor_user_id_column,
+    ensure_blood_request_user_id_column,
+)
 from app.routers import donors, requests, acceptances, auth
 
 
@@ -18,6 +25,9 @@ Base.metadata.create_all(bind=engine)
 
 # Ensures the live database has the donor authentication column.
 ensure_donor_user_id_column()
+
+# Ensures the live database has the hospital request authentication column.
+ensure_blood_request_user_id_column()
 
 
 app = FastAPI(title="HemoLink — Blood Donor Matching API")
@@ -29,7 +39,7 @@ app.include_router(auth.router)
 
 
 # Serves the web app at http://localhost:8000/app
-# (the API itself still lives at /donors, /requests, /acceptances, /docs)
+# The API itself still lives at /donors, /requests, /acceptances, /docs.
 app.mount("/app", StaticFiles(directory="static", html=True), name="static")
 
 

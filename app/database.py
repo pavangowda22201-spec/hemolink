@@ -37,3 +37,13 @@ def ensure_donor_user_id_column():
                 "ADD COLUMN IF NOT EXISTS user_id VARCHAR"
             )
         )
+
+
+def ensure_blood_request_user_id_column():
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE blood_requests "
+                "ADD COLUMN IF NOT EXISTS user_id VARCHAR"
+            )
+        )
