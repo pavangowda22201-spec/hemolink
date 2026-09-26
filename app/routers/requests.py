@@ -1,7 +1,3 @@
-"""
-RUN LOCATION: Imported by main.py — not run directly.
-"""
-
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -12,38 +8,20 @@ from app.dependencies import get_current_user
 from app.models.models import (
     BloodRequest,
     Acceptance,
-    AcceptanceStatus,
-    RequestStatus,
     User,
-    UserType,
 )
 from app.schemas.schemas import (
-    RequestCreate,
     RequestOut,
-    CandidateOut,
-    RequestMatchOut,
     AcceptanceOut,
     DonorActiveRequestOut,
     RequestTrackingOut,
-    DonorTrackingOut,
 )
-from app.services.matching_engine import find_candidates_at_radius, match_request
-from app.services.notification_service import notify_candidates
-
-router = APIRouter(prefix="/requests", tags=["requests"])
 
 
-def _redact_donor_name(name: str) -> str:
-    """Return a useful but privacy-minimized donor label for hospital matching."""
-    parts = [part for part in name.split() if part]
-
-    if not parts:
-        return "Verified donor"
-
-    return " ".join(
-        f"{part[0].upper()}\u2022\u2022\u2022"
-        for part in parts[:2]
-    )
+router = APIRouter(
+    prefix="/requests",
+    tags=["requests"],
+)
 
 
 @router.get("/", response_model=List[RequestOut])
@@ -58,6 +36,27 @@ def list_requests(
     )
 
 
+@router.get("/{request_id}", response_model=RequestOut)
+def get_request(
+    request_id: str,
+    db: Session = Depends(get_db),
+):
+    """Returns a single blood request by ID."""
+    request = (
+        db.query(BloodRequest)
+        .filter(BloodRequest.id == request_id)
+        .first()
+    )
+
+    if request is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Blood request not found",
+        )
+
+    return request
+
+
 @router.get(
     "/{request_id}/acceptances",
     response_model=List[AcceptanceOut],
@@ -67,9 +66,22 @@ def get_request_acceptances(
     db: Session = Depends(get_db),
 ):
     """Returns every donor acceptance for a request."""
+    request = (
+        db.query(BloodRequest)
+        .filter(BloodRequest.id == request_id)
+        .first()
+    )
+
+    if request is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Blood request not found",
+        )
+
     return (
         db.query(Acceptance)
         .filter(Acceptance.request_id == request_id)
+        .order_by(Acceptance.accepted_at.desc())
         .all()
     )
 
@@ -83,29 +95,21 @@ def get_donor_active_request(
     db: Session = Depends(get_db),
 ):
     """
-    Returns the donor's current active accepted request.
-
-    Only the authenticated donor can access this endpoint.
-    A pending acceptance is considered active.
+    Returns the authenticated donor's current active request,
+    including the request and acceptance information.
     """
-
-    if current_user.user_type != UserType.DONOR:
-        raise HTTPException(
-            status_code=403,
-            detail="Donor account required.",
-        )
 
     acceptance = (
         db.query(Acceptance)
         .filter(
             Acceptance.user_id == current_user.id,
-            Acceptance.status == AcceptanceStatus.PENDING,
+            Acceptance.status == "PENDING",
         )
         .order_by(Acceptance.accepted_at.desc())
         .first()
     )
 
-    if not acceptance:
+    if acceptance is None:
         return None
 
     request = (
@@ -114,7 +118,7 @@ def get_donor_active_request(
         .first()
     )
 
-    if not request:
+    if request is None:
         return None
 
     return DonorActiveRequestOut(
@@ -132,68 +136,74 @@ def get_request_tracking(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Returns live donor tracking data for the owning hospital."""
-
-    if current_user.user_type != UserType.HOSPITAL:
-        raise HTTPException(
-            status_code=403,
-            detail="Hospital account required.",
-        )
+    """
+    Returns live donor tracking information for a hospital-owned request.
+    """
 
     request = (
         db.query(BloodRequest)
-        .filter(
-            BloodRequest.id == request_id,
-            BloodRequest.user_id == current_user.id,
-        )
+        .filter(BloodRequest.id == request_id)
         .first()
     )
 
-    if not request:
+    if request is None:
         raise HTTPException(
             status_code=404,
-            detail="Request not found for this hospital.",
+            detail="Blood request not found",
         )
 
-    acceptances = (
+    if request.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="Not authorized to track this request",
+        )
+
+    acceptance = (
         db.query(Acceptance)
         .filter(
-            Acceptance.request_id == request.id,
-            Acceptance.status.in_(
-                [
-                    AcceptanceStatus.PENDING,
-                    AcceptanceStatus.FULFILLED,
-                ]
-            ),
+            Acceptance.request_id == request_id,
+            Acceptance.status == "PENDING",
         )
-        .order_by(Acceptance.accepted_at.asc())
-        .all()
+        .order_by(Acceptance.accepted_at.desc())
+        .first()
     )
 
-    donors = []
+    if acceptance is None:
+        return RequestTrackingOut(
+            request_id=request.id,
+            hospital_name=request.hospital_name,
+            hospital_latitude=request.latitude,
+            hospital_longitude=request.longitude,
+            donor_id=None,
+            donor_latitude=None,
+            donor_longitude=None,
+            acceptance_id=None,
+            status=None,
+            accepted_at=None,
+            eta_deadline=None,
+        )
 
-    for acceptance in acceptances:
-        donor = acceptance.donor
+    donor = None
 
-        if not donor:
-            continue
+    if acceptance.donor_id:
+        from app.models.models import Donor
 
-        donors.append(
-            DonorTrackingOut(
-                donor_id=donor.id,
-                donor_name=_redact_donor_name(donor.name),
-                latitude=donor.latitude,
-                longitude=donor.longitude,
-                status=acceptance.status,
-                accepted_at=acceptance.accepted_at,
-                eta_deadline=acceptance.eta_deadline,
-                resolved_at=acceptance.resolved_at,
-            )
+        donor = (
+            db.query(Donor)
+            .filter(Donor.id == acceptance.donor_id)
+            .first()
         )
 
     return RequestTrackingOut(
         request_id=request.id,
+        hospital_name=request.hospital_name,
         hospital_latitude=request.latitude,
         hospital_longitude=request.longitude,
-        donors=donors,
+        donor_id=acceptance.donor_id,
+        donor_latitude=donor.latitude if donor else None,
+        donor_longitude=donor.longitude if donor else None,
+        acceptance_id=acceptance.id,
+        status=acceptance.status,
+        accepted_at=acceptance.accepted_at,
+        eta_deadline=acceptance.eta_deadline,
     )
