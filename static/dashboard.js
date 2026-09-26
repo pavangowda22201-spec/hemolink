@@ -1,4 +1,4 @@
-const API = "";
+const API = "https://hemolink-api-tm3c.onrender.com";
 const DEFAULT_HOSPITAL = {
   name: "RedSync General Hospital",
   latitude: 12.9716,
