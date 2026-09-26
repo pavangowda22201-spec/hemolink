@@ -92,6 +92,44 @@ class Donor(Base):
 
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    # Donor health profile
+    smoking_tobacco = Column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
+    alcohol_use = Column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
+    previous_illnesses = Column(
+        Text,
+        nullable=True,
+    )
+
+    diseases = Column(
+        Text,
+        nullable=True,
+    )
+
+    medications = Column(
+        Text,
+        nullable=True,
+    )
+
+    medical_history = Column(
+        Text,
+        nullable=True,
+    )
+
+    health_profile_updated_at = Column(
+        DateTime,
+        nullable=True,
+    )
+
     acceptances = relationship(
         "Acceptance",
         back_populates="donor",
@@ -128,7 +166,11 @@ class BloodRequest(Base):
     units_needed = Column(Integer, default=1)
     fulfilled_units = Column(Integer, default=0, nullable=False)
 
-    urgency = Column(Enum(UrgencyLevel), nullable=False)
+    urgency = Column(
+        Enum(UrgencyLevel),
+        nullable=False,
+    )
+
     status = Column(
         Enum(RequestStatus),
         default=RequestStatus.OPEN,
@@ -137,17 +179,30 @@ class BloodRequest(Base):
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
 
-    current_radius_km = Column(Float, default=5.0)
-    eta_window_minutes = Column(Integer, default=45)
+    current_radius_km = Column(
+        Float,
+        default=5.0,
+    )
 
-    notes = Column(Text, nullable=True)
+    eta_window_minutes = Column(
+        Integer,
+        default=45,
+    )
+
+    notes = Column(
+        Text,
+        nullable=True,
+    )
 
     created_at = Column(
         DateTime,
         default=datetime.utcnow,
     )
 
-    fulfilled_at = Column(DateTime, nullable=True)
+    fulfilled_at = Column(
+        DateTime,
+        nullable=True,
+    )
 
     acceptances = relationship(
         "Acceptance",
@@ -167,7 +222,11 @@ class Acceptance(Base):
 
     __tablename__ = "acceptances"
 
-    id = Column(String, primary_key=True, default=gen_uuid)
+    id = Column(
+        String,
+        primary_key=True,
+        default=gen_uuid,
+    )
 
     # A user can have many acceptance records over time.
     user_id = Column(
@@ -188,7 +247,11 @@ class Acceptance(Base):
         nullable=False,
     )
 
-    units_fulfilled = Column(Integer, default=1, nullable=False)
+    units_fulfilled = Column(
+        Integer,
+        default=1,
+        nullable=False,
+    )
 
     status = Column(
         Enum(AcceptanceStatus),
@@ -226,7 +289,11 @@ class NotificationLog(Base):
 
     __tablename__ = "notification_logs"
 
-    id = Column(String, primary_key=True, default=gen_uuid)
+    id = Column(
+        String,
+        primary_key=True,
+        default=gen_uuid,
+    )
 
     # A user can have many notification records.
     user_id = Column(
