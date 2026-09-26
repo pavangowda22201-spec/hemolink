@@ -55,3 +55,13 @@ def ensure_blood_request_schema():
                 "INTEGER NOT NULL DEFAULT 0"
             )
         )
+
+
+def ensure_acceptance_user_id_column():
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE acceptances "
+                "ADD COLUMN IF NOT EXISTS user_id VARCHAR"
+            )
+        )
