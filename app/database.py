@@ -39,11 +39,19 @@ def ensure_donor_user_id_column():
         )
 
 
-def ensure_blood_request_user_id_column():
+def ensure_blood_request_schema():
     with engine.begin() as connection:
         connection.execute(
             text(
                 "ALTER TABLE blood_requests "
                 "ADD COLUMN IF NOT EXISTS user_id VARCHAR"
+            )
+        )
+
+        connection.execute(
+            text(
+                "ALTER TABLE blood_requests "
+                "ADD COLUMN IF NOT EXISTS fulfilled_units "
+                "INTEGER NOT NULL DEFAULT 0"
             )
         )

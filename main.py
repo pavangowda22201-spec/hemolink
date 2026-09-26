@@ -15,7 +15,7 @@ from app.database import (
     Base,
     engine,
     ensure_donor_user_id_column,
-    ensure_blood_request_user_id_column,
+    ensure_blood_request_schema,
 )
 from app.routers import donors, requests, acceptances, auth
 
@@ -26,8 +26,8 @@ Base.metadata.create_all(bind=engine)
 # Ensures the live database has the donor authentication column.
 ensure_donor_user_id_column()
 
-# Ensures the live database has the hospital request authentication column.
-ensure_blood_request_user_id_column()
+# Ensures the live database has the required blood-request columns.
+ensure_blood_request_schema()
 
 
 app = FastAPI(title="HemoLink — Blood Donor Matching API")
