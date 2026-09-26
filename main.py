@@ -9,11 +9,16 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from app.database import Base, engine
+from app.database import Base, engine, ensure_donor_user_id_column
 from app.routers import donors, requests, acceptances, auth
 
-# Creates tables if they don't exist yet (fine for dev; use Alembic migrations in production).
+
+# Creates tables if they don't exist yet.
 Base.metadata.create_all(bind=engine)
+
+# Ensures the live database has the donor authentication column.
+ensure_donor_user_id_column()
+
 
 app = FastAPI(title="HemoLink — Blood Donor Matching API")
 
@@ -21,6 +26,7 @@ app.include_router(donors.router)
 app.include_router(requests.router)
 app.include_router(acceptances.router)
 app.include_router(auth.router)
+
 
 # Serves the web app at http://localhost:8000/app
 # (the API itself still lives at /donors, /requests, /acceptances, /docs)

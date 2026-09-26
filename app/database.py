@@ -1,24 +1,39 @@
-"""
-RUN LOCATION: This file is imported automatically by main.py — you never run it directly.
-SETUP: Set the DATABASE_URL environment variable before starting the app, e.g.:
-    export DATABASE_URL="postgresql://user:password@localhost:5432/hemolink"
-"""
 import os
-from sqlalchemy import create_engine
+
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/hemolink")
+
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:postgres@localhost:5432/hemolink",
+)
 
 engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine,
+)
+
 Base = declarative_base()
 
 
 def get_db():
-    """FastAPI dependency — yields a DB session per request and closes it after."""
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
+
+
+def ensure_donor_user_id_column():
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE donors "
+                "ADD COLUMN IF NOT EXISTS user_id VARCHAR"
+            )
+        )
