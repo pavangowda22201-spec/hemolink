@@ -9,8 +9,10 @@ from app.models.models import (
     BloodRequest,
     Acceptance,
     User,
+    UserType,
 )
 from app.schemas.schemas import (
+    RequestCreate,
     RequestOut,
     AcceptanceOut,
     DonorActiveRequestOut,
@@ -24,11 +26,48 @@ router = APIRouter(
 )
 
 
+@router.post("/", response_model=RequestOut)
+def create_request(
+    payload: RequestCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Creates a blood request for the authenticated hospital.
+    """
+
+    if current_user.user_type != UserType.HOSPITAL:
+        raise HTTPException(
+            status_code=403,
+            detail="Hospital account required.",
+        )
+
+    request = BloodRequest(
+        user_id=current_user.id,
+        hospital_name=payload.hospital_name,
+        blood_group_needed=payload.blood_group_needed,
+        units_needed=payload.units_needed,
+        urgency=payload.urgency,
+        latitude=payload.latitude,
+        longitude=payload.longitude,
+        eta_window_minutes=payload.eta_window_minutes,
+        notes=payload.notes,
+        current_radius_km=5.0,
+    )
+
+    db.add(request)
+    db.commit()
+    db.refresh(request)
+
+    return request
+
+
 @router.get("/", response_model=List[RequestOut])
 def list_requests(
     db: Session = Depends(get_db),
 ):
     """Returns all blood requests, most recently created first."""
+
     return (
         db.query(BloodRequest)
         .order_by(BloodRequest.created_at.desc())
@@ -42,6 +81,7 @@ def get_request(
     db: Session = Depends(get_db),
 ):
     """Returns a single blood request by ID."""
+
     request = (
         db.query(BloodRequest)
         .filter(BloodRequest.id == request_id)
@@ -66,6 +106,7 @@ def get_request_acceptances(
     db: Session = Depends(get_db),
 ):
     """Returns every donor acceptance for a request."""
+
     request = (
         db.query(BloodRequest)
         .filter(BloodRequest.id == request_id)
@@ -171,39 +212,14 @@ def get_request_tracking(
     if acceptance is None:
         return RequestTrackingOut(
             request_id=request.id,
-            hospital_name=request.hospital_name,
             hospital_latitude=request.latitude,
             hospital_longitude=request.longitude,
-            donor_id=None,
-            donor_latitude=None,
-            donor_longitude=None,
-            acceptance_id=None,
-            status=None,
-            accepted_at=None,
-            eta_deadline=None,
-        )
-
-    donor = None
-
-    if acceptance.donor_id:
-        from app.models.models import Donor
-
-        donor = (
-            db.query(Donor)
-            .filter(Donor.id == acceptance.donor_id)
-            .first()
+            donors=[],
         )
 
     return RequestTrackingOut(
         request_id=request.id,
-        hospital_name=request.hospital_name,
         hospital_latitude=request.latitude,
         hospital_longitude=request.longitude,
-        donor_id=acceptance.donor_id,
-        donor_latitude=donor.latitude if donor else None,
-        donor_longitude=donor.longitude if donor else None,
-        acceptance_id=acceptance.id,
-        status=acceptance.status,
-        accepted_at=acceptance.accepted_at,
-        eta_deadline=acceptance.eta_deadline,
+        donors=[],
     )
