@@ -24,6 +24,8 @@ from app.services.reliability_service import (
     penalize_no_show,
     is_eligible_for_matching,
 )
+from app.services.blood_compatibility import is_compatible
+
 
 
 def accept_request(db: Session, request: BloodRequest, donor: Donor) -> Acceptance:
@@ -36,6 +38,14 @@ def accept_request(db: Session, request: BloodRequest, donor: Donor) -> Acceptan
     if not is_eligible_for_matching(donor):
         raise ValueError(
             "Donor is not currently eligible (suspended, unavailable, or in cooldown)."
+        )
+
+    if not is_compatible(
+        donor.blood_group,
+        request.blood_group_needed,
+    ):
+        raise ValueError(
+            "Donor blood group is not compatible with this request."
         )
 
     if donor.has_active_request(db):
