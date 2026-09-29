@@ -65,14 +65,23 @@ def create_request(
 
 @router.get("/", response_model=List[RequestOut])
 def list_requests(
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
-    Returns all blood requests, most recently created first.
+    Returns blood requests visible to the authenticated user.
+    Hospitals only see their own requests.
     """
 
+    query = db.query(BloodRequest)
+
+    if current_user.user_type == UserType.HOSPITAL:
+        query = query.filter(
+            BloodRequest.user_id == current_user.id
+        )
+
     return (
-        db.query(BloodRequest)
+        query
         .order_by(BloodRequest.created_at.desc())
         .all()
     )
