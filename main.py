@@ -34,6 +34,7 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://10.57.13.88:5173",
         "http://localhost:5174",
+        "https://hemo-link-dashboard.vercel.app",
     ],
     allow_credentials=False,
     allow_methods=["*"],
