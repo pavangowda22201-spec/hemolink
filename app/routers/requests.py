@@ -87,6 +87,71 @@ def list_requests(
     )
 
 
+@router.get(
+    "/donor/active",
+    response_model=DonorActiveRequestOut,
+)
+def get_donor_active_request(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns the authenticated donor's active pending acceptance
+    and its associated blood request.
+    """
+
+    if current_user.user_type != UserType.DONOR:
+        raise HTTPException(
+            status_code=403,
+            detail="Donor account required.",
+        )
+
+    donor = (
+        db.query(Donor)
+        .filter(Donor.user_id == current_user.id)
+        .first()
+    )
+
+    if donor is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Donor profile not found.",
+        )
+
+    acceptance = (
+        db.query(Acceptance)
+        .filter(
+            Acceptance.donor_id == donor.id,
+            Acceptance.status == "pending",
+        )
+        .order_by(Acceptance.accepted_at.desc())
+        .first()
+    )
+
+    if acceptance is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No active donation found.",
+        )
+
+    request = (
+        db.query(BloodRequest)
+        .filter(BloodRequest.id == acceptance.request_id)
+        .first()
+    )
+
+    if request is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Blood request not found.",
+        )
+
+    return DonorActiveRequestOut(
+        request=request,
+        acceptance=acceptance,
+    )
+
+
 @router.get("/{request_id}", response_model=RequestOut)
 def get_request(
     request_id: str,
