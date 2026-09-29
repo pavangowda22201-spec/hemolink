@@ -129,6 +129,24 @@ class AcceptanceOut(BaseModel):
     eta_deadline: datetime
     resolved_at: Optional[datetime] = None
 
+class HospitalAcceptanceOut(BaseModel):
+    id: str
+    request_id: str
+    donor_id: str
+
+    units_fulfilled: int
+    status: AcceptanceStatus
+    accepted_at: datetime
+    eta_deadline: datetime
+    resolved_at: Optional[datetime] = None
+
+    donor_name: str
+    donor_phone: str
+    donor_blood_group: BloodGroup
+    donor_is_verified: bool
+    donor_reliability_score: float
+    donor_total_donations: int
+    
 class DonorActiveRequestOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

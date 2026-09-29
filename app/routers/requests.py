@@ -8,6 +8,7 @@ from app.dependencies import get_current_user
 from app.models.models import (
     BloodRequest,
     Acceptance,
+    Donor,
     User,
     UserType,
 )
@@ -15,10 +16,10 @@ from app.schemas.schemas import (
     RequestCreate,
     RequestOut,
     AcceptanceOut,
+    HospitalAcceptanceOut,
     DonorActiveRequestOut,
     RequestTrackingOut,
 )
-
 
 router = APIRouter(
     prefix="/requests",
@@ -66,7 +67,9 @@ def create_request(
 def list_requests(
     db: Session = Depends(get_db),
 ):
-    """Returns all blood requests, most recently created first."""
+    """
+    Returns all blood requests, most recently created first.
+    """
 
     return (
         db.query(BloodRequest)
@@ -80,7 +83,9 @@ def get_request(
     request_id: str,
     db: Session = Depends(get_db),
 ):
-    """Returns a single blood request by ID."""
+    """
+    Returns a single blood request by ID.
+    """
 
     request = (
         db.query(BloodRequest)
@@ -99,13 +104,16 @@ def get_request(
 
 @router.get(
     "/{request_id}/acceptances",
-    response_model=List[AcceptanceOut],
+    response_model=List[HospitalAcceptanceOut],
 )
 def get_request_acceptances(
     request_id: str,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Returns every donor acceptance for a request."""
+    """
+    Returns donor acceptance details for a hospital's own blood request.
+    """
 
     request = (
         db.query(BloodRequest)
@@ -119,107 +127,42 @@ def get_request_acceptances(
             detail="Blood request not found",
         )
 
-    return (
-        db.query(Acceptance)
-        .filter(Acceptance.request_id == request_id)
-        .order_by(Acceptance.accepted_at.desc())
-        .all()
-    )
-
-
-@router.get(
-    "/donor/active",
-    response_model=DonorActiveRequestOut | None,
-)
-def get_donor_active_request(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """
-    Returns the authenticated donor's current active request,
-    including the request and acceptance information.
-    """
-
-    acceptance = (
-        db.query(Acceptance)
-        .filter(
-            Acceptance.user_id == current_user.id,
-            Acceptance.status == "PENDING",
-        )
-        .order_by(Acceptance.accepted_at.desc())
-        .first()
-    )
-
-    if acceptance is None:
-        return None
-
-    request = (
-        db.query(BloodRequest)
-        .filter(BloodRequest.id == acceptance.request_id)
-        .first()
-    )
-
-    if request is None:
-        return None
-
-    return DonorActiveRequestOut(
-        request=request,
-        acceptance=acceptance,
-    )
-
-
-@router.get(
-    "/{request_id}/tracking",
-    response_model=RequestTrackingOut,
-)
-def get_request_tracking(
-    request_id: str,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """
-    Returns live donor tracking information for a hospital-owned request.
-    """
-
-    request = (
-        db.query(BloodRequest)
-        .filter(BloodRequest.id == request_id)
-        .first()
-    )
-
-    if request is None:
+    if current_user.user_type != UserType.HOSPITAL:
         raise HTTPException(
-            status_code=404,
-            detail="Blood request not found",
+            status_code=403,
+            detail="Hospital account required.",
         )
 
     if request.user_id != current_user.id:
         raise HTTPException(
             status_code=403,
-            detail="Not authorized to track this request",
+            detail="You can only view donors for your own requests.",
         )
 
-    acceptance = (
-        db.query(Acceptance)
-        .filter(
-            Acceptance.request_id == request_id,
-            Acceptance.status == "PENDING",
-        )
+    acceptances = (
+        db.query(Acceptance, Donor)
+        .join(Donor, Donor.id == Acceptance.donor_id)
+        .filter(Acceptance.request_id == request_id)
         .order_by(Acceptance.accepted_at.desc())
-        .first()
+        .all()
     )
 
-    if acceptance is None:
-        return RequestTrackingOut(
-            request_id=request.id,
-            hospital_latitude=request.latitude,
-            hospital_longitude=request.longitude,
-            donors=[],
+    return [
+        HospitalAcceptanceOut(
+            id=acceptance.id,
+            request_id=acceptance.request_id,
+            donor_id=acceptance.donor_id,
+            units_fulfilled=acceptance.units_fulfilled,
+            status=acceptance.status,
+            accepted_at=acceptance.accepted_at,
+            eta_deadline=acceptance.eta_deadline,
+            resolved_at=acceptance.resolved_at,
+            donor_name=donor.name,
+            donor_phone=donor.phone,
+            donor_blood_group=donor.blood_group,
+            donor_is_verified=donor.is_verified,
+            donor_reliability_score=donor.reliability_score,
+            donor_total_donations=donor.total_donations,
         )
-
-    return RequestTrackingOut(
-        request_id=request.id,
-        hospital_latitude=request.latitude,
-        hospital_longitude=request.longitude,
-        donors=[],
-    )
+        for acceptance, donor in acceptances
+    ]
