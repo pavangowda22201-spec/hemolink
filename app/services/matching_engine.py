@@ -125,6 +125,10 @@ def find_candidates_at_radius(
         if donor.has_active_request(db):
             continue
 
+        # Skip donors without a usable location.
+        if donor.latitude is None or donor.longitude is None:
+            continue
+
         dist = distance_km(
             request.latitude,
             request.longitude,

@@ -7,6 +7,7 @@ from app.database import (
     Base,
     engine,
     ensure_donor_user_id_column,
+    ensure_donor_push_token_column,
     ensure_blood_request_schema,
     ensure_acceptance_user_id_column,
 )
@@ -16,6 +17,7 @@ from app.routers import donors, requests, acceptances, auth
 Base.metadata.create_all(bind=engine)
 
 ensure_donor_user_id_column()
+ensure_donor_push_token_column()
 ensure_blood_request_schema()
 ensure_acceptance_user_id_column()
 

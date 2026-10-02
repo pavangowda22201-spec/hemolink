@@ -39,6 +39,16 @@ def ensure_donor_user_id_column():
         )
 
 
+def ensure_donor_push_token_column():
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE donors "
+                "ADD COLUMN IF NOT EXISTS push_token VARCHAR"
+            )
+        )
+
+
 def ensure_blood_request_schema():
     with engine.begin() as connection:
         connection.execute(

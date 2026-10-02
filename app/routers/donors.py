@@ -9,6 +9,7 @@ from app.schemas.schemas import (
     DonorOut,
     DonorUpdate,
     DonorLocationUpdate,
+    PushTokenUpdate,
 )
 
 router = APIRouter(prefix="/donors", tags=["donors"])
@@ -192,6 +193,44 @@ def update_my_location(
 
     donor.latitude = payload.latitude
     donor.longitude = payload.longitude
+
+    db.commit()
+    db.refresh(donor)
+
+    return donor
+
+
+@router.patch("/me/push-token", response_model=DonorOut)
+def update_my_push_token(
+    payload: PushTokenUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if current_user.user_type != UserType.DONOR:
+        raise HTTPException(
+            status_code=403,
+            detail="Donor account required.",
+        )
+
+    donor = db.query(Donor).filter(
+        Donor.user_id == current_user.id
+    ).first()
+
+    if not donor:
+        raise HTTPException(
+            status_code=404,
+            detail="Donor profile not created yet.",
+        )
+
+    push_token = payload.push_token.strip()
+
+    if not push_token:
+        raise HTTPException(
+            status_code=400,
+            detail="Push token cannot be empty.",
+        )
+
+    donor.push_token = push_token
 
     db.commit()
     db.refresh(donor)

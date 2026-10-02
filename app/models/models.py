@@ -88,6 +88,7 @@ class Donor(Base):
     total_no_shows = Column(Integer, default=0)
 
     cooldown_until = Column(DateTime, nullable=True)
+    push_token = Column(String, nullable=True)
     last_donation_at = Column(DateTime, nullable=True)
 
     created_at = Column(DateTime, default=datetime.utcnow)

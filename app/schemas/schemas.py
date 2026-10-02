@@ -42,6 +42,11 @@ class DonorLocationUpdate(BaseModel):
     longitude: float = Field(ge=-180, le=180)
 
 
+class PushTokenUpdate(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    push_token: str = Field(min_length=1, max_length=512)
+
 class DonorOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -146,7 +151,7 @@ class HospitalAcceptanceOut(BaseModel):
     donor_is_verified: bool
     donor_reliability_score: float
     donor_total_donations: int
-    
+
 class DonorActiveRequestOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

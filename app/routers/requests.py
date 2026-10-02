@@ -1,3 +1,4 @@
+
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -20,6 +21,8 @@ from app.schemas.schemas import (
     DonorActiveRequestOut,
     RequestTrackingOut,
 )
+from app.services.matching_engine import match_request
+from app.services.notification_service import notify_candidates
 
 router = APIRouter(
     prefix="/requests",
@@ -34,7 +37,8 @@ def create_request(
     db: Session = Depends(get_db),
 ):
     """
-    Creates a blood request for the authenticated hospital.
+    Creates a blood request for the authenticated hospital,
+    then matches eligible donors and records notification attempts.
     """
 
     if current_user.user_type != UserType.HOSPITAL:
@@ -56,10 +60,24 @@ def create_request(
         current_radius_km=5.0,
     )
 
+    # Save the request before starting matching.
     db.add(request)
     db.commit()
     db.refresh(request)
 
+    try:
+        candidates = match_request(db, request)
+        notify_candidates(db, request, candidates)
+    except Exception as exc:
+        # Matching failure must not erase the saved request.
+        db.rollback()
+        print(
+            "[HemoLink] Matching/notification processing failed "
+            f"for request {request.id}: {exc}"
+        )
+
+    # Refresh after matching because the radius may have changed.
+    db.refresh(request)
     return request
 
 
@@ -186,7 +204,7 @@ def get_request_acceptances(
     db: Session = Depends(get_db),
 ):
     """
-    Returns donor acceptance details for a hospital's own blood request.
+    Returns donor acceptance details for a hospital's own request.
     """
 
     request = (
