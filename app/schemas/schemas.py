@@ -151,6 +151,9 @@ class HospitalAcceptanceOut(BaseModel):
     donor_is_verified: bool
     donor_reliability_score: float
     donor_total_donations: int
+    donor_latitude: Optional[float] = None
+    donor_longitude: Optional[float] = None
+    donor_location_updated_at: Optional[datetime] = None
 
 class DonorActiveRequestOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)

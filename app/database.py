@@ -75,11 +75,20 @@ def ensure_acceptance_user_id_column():
                 "ADD COLUMN IF NOT EXISTS user_id VARCHAR"
             )
         )
-
         connection.execute(
             text(
                 "ALTER TABLE acceptances "
                 "ADD COLUMN IF NOT EXISTS units_fulfilled "
                 "INTEGER NOT NULL DEFAULT 1"
+            )
+        )
+
+
+def ensure_donor_location_updated_at_column():
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE donors "
+                "ADD COLUMN IF NOT EXISTS location_updated_at TIMESTAMP"
             )
         )

@@ -78,6 +78,7 @@ class Donor(Base):
 
     latitude = Column(Float, nullable=False)
     longitude = Column(Float, nullable=False)
+    location_updated_at = Column(DateTime, nullable=True)
 
     is_available = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)

@@ -255,6 +255,9 @@ def get_request_acceptances(
             donor_is_verified=donor.is_verified,
             donor_reliability_score=donor.reliability_score,
             donor_total_donations=donor.total_donations,
+            donor_latitude=donor.latitude,
+            donor_longitude=donor.longitude,
+            donor_location_updated_at=donor.location_updated_at,
         )
         for acceptance, donor in acceptances
     ]

@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -7,6 +7,7 @@ from app.database import (
     Base,
     engine,
     ensure_donor_user_id_column,
+    ensure_donor_location_updated_at_column,
     ensure_donor_push_token_column,
     ensure_blood_request_schema,
     ensure_acceptance_user_id_column,
@@ -20,7 +21,7 @@ ensure_donor_user_id_column()
 ensure_donor_push_token_column()
 ensure_blood_request_schema()
 ensure_acceptance_user_id_column()
-
+ensure_donor_location_updated_at_column()
 
 app = FastAPI(title="HemoLink - Blood Donor Matching API")
 

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -193,6 +194,7 @@ def update_my_location(
 
     donor.latitude = payload.latitude
     donor.longitude = payload.longitude
+    donor.location_updated_at = datetime.utcnow()
 
     db.commit()
     db.refresh(donor)
