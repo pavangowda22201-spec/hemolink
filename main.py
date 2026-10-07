@@ -12,7 +12,7 @@ from app.database import (
     ensure_blood_request_schema,
     ensure_acceptance_user_id_column,
 )
-from app.routers import donors, requests, acceptances, auth
+from app.routers import donors, requests, acceptances, auth, tracking
 
 
 Base.metadata.create_all(bind=engine)
@@ -56,6 +56,7 @@ app.include_router(donors.router)
 app.include_router(requests.router)
 app.include_router(acceptances.router)
 app.include_router(auth.router)
+app.include_router(tracking.router)
 
 
 # ---------------------------------------------------------
