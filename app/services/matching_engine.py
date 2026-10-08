@@ -125,16 +125,15 @@ def find_candidates_at_radius(
         if donor.has_active_request(db):
             continue
 
-        # Skip donors without a usable location.
         if donor.latitude is None or donor.longitude is None:
-            continue
-
-        dist = distance_km(
-            request.latitude,
-            request.longitude,
-            donor.latitude,
-            donor.longitude,
-        )
+            dist = 0.0
+        else:
+            dist = distance_km(
+                request.latitude,
+                request.longitude,
+                donor.latitude,
+                donor.longitude,
+            )
 
         if dist > radius_km:
             continue
@@ -198,3 +197,4 @@ def match_request(
     db.commit()
 
     return candidates
+
