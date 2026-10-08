@@ -13,7 +13,8 @@ expands, only newly discovered donors are notified.
 """
 
 from typing import List
-
+import json
+import urllib.request
 from sqlalchemy.orm import Session
 
 from app.models.models import (
@@ -38,11 +39,32 @@ def _build_message(request: BloodRequest, dist_km: float) -> str:
         f"Tap to accept."
     )
 
+def send_push(push_token: str, message: str) -> None:
+    """Send an emergency push notification through Expo."""
+    payload = {
+        "to": push_token,
+        "sound": "default",
+        "title": "HemoLink Emergency",
+        "body": message,
+        "channelId": "hemolink-emergency",
+        "priority": "high",
+    }
 
-def send_sms(phone: str, message: str) -> None:
-    """STUB — wire up a real SMS provider (e.g. Twilio, FCM) here."""
-    print(f"[SMS -> {phone}] {message}")
+    data = json.dumps(payload).encode("utf-8")
 
+    request = urllib.request.Request(
+        "https://exp.host/--/api/v2/push/send",
+        data=data,
+        headers={
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+
+    with urllib.request.urlopen(request, timeout=10) as response:
+        result = response.read().decode("utf-8")
+        print(f"[EXPO PUSH] {response.status}: {result}")
 
 def _already_notified(
     db: Session,
@@ -103,10 +125,20 @@ def notify_candidates(
             candidate.distance_km,
         )
 
-        send_sms(
-            candidate.donor.phone,
-            message,
-        )
+        if candidate.donor.push_token:
+            try:
+                send_push(
+                    candidate.donor.push_token,
+                    message,
+                )
+            except Exception as exc:
+                print(
+                    f'[EXPO PUSH ERROR -> donor {candidate.donor.id}] {exc}'
+                )
+        else:
+            print(
+                f'[EXPO PUSH SKIPPED -> donor {candidate.donor.id}] No push token registered.'
+            )
 
         log = NotificationLog(
             request_id=request.id,
