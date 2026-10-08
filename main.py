@@ -17,11 +17,6 @@ from app.routers import donors, requests, acceptances, auth, tracking
 
 Base.metadata.create_all(bind=engine)
 
-ensure_donor_user_id_column()
-ensure_donor_push_token_column()
-ensure_blood_request_schema()
-ensure_acceptance_user_id_column()
-ensure_donor_location_updated_at_column()
 
 app = FastAPI(title="HemoLink - Blood Donor Matching API")
 
