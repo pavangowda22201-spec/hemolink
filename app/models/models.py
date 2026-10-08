@@ -144,6 +144,7 @@ class Donor(Base):
             .filter(
                 Acceptance.donor_id == self.id,
                 Acceptance.status == AcceptanceStatus.PENDING,
+Acceptance.eta_deadline > datetime.utcnow(),
             )
             .count()
             > 0
