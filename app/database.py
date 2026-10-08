@@ -92,3 +92,37 @@ def ensure_donor_location_updated_at_column():
                 "ADD COLUMN IF NOT EXISTS location_updated_at TIMESTAMP"
             )
         )
+
+
+def ensure_donor_health_profile_columns():
+    with engine.begin() as connection:
+        connection.execute(text(
+            "ALTER TABLE donors ADD COLUMN IF NOT EXISTS "
+            "smoking_tobacco BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        connection.execute(text(
+            "ALTER TABLE donors ADD COLUMN IF NOT EXISTS "
+            "alcohol_use BOOLEAN NOT NULL DEFAULT FALSE"
+        ))
+        for column in (
+            "previous_illnesses",
+            "diseases",
+            "medications",
+            "medical_history",
+        ):
+            connection.execute(text(
+                f"ALTER TABLE donors ADD COLUMN IF NOT EXISTS {column} TEXT"
+            ))
+        connection.execute(text(
+            "ALTER TABLE donors ADD COLUMN IF NOT EXISTS "
+            "health_profile_updated_at TIMESTAMP"
+        ))
+
+def ensure_notification_log_user_id_column():
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "ALTER TABLE notification_logs "
+                "ADD COLUMN IF NOT EXISTS user_id VARCHAR"
+            )
+        )
