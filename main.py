@@ -36,6 +36,7 @@ app.add_middleware(
         "http://localhost:5174",
         "http://127.0.0.1:5175",
         "http://localhost:5175",
+        "http://localhost:5176",
         "http://127.0.0.1:5174",
         "https://hemo-link-dashboard.vercel.app",
         "https://hemolink-dashboard.onrender.com",
