@@ -100,6 +100,11 @@ def fulfill_request(db: Session, acceptance: Acceptance) -> Acceptance:
     if acceptance.status != AcceptanceStatus.PENDING:
         raise ValueError("This acceptance is no longer pending.")
 
+    if acceptance.arrived_at is None:
+        raise ValueError(
+            "The donor must mark arrival before the hospital can fulfill this donation."
+        )
+
     request = acceptance.request
 
     if request.status not in (
@@ -133,7 +138,7 @@ def fulfill_request(db: Session, acceptance: Acceptance) -> Acceptance:
 
     request.fulfilled_units += units_to_fulfill
 
-    reward_successful_donation(db, acceptance.donor)
+    reward_successful_donation(db, acceptance.donor, commit=False)
     acceptance.donor.is_available = True
 
     if request.fulfilled_units >= request.units_needed:

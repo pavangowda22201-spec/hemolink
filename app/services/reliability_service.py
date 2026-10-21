@@ -18,7 +18,9 @@ COOLDOWN_HOURS_AFTER_NO_SHOW = 36  # within the 24-48h range requested
 NO_SHOW_SUSPEND_THRESHOLD = 3       # lifetime no-shows that trigger admin review/suspension
 
 
-def reward_successful_donation(db: Session, donor: Donor) -> Donor:
+def reward_successful_donation(
+    db: Session, donor: Donor, *, commit: bool = True
+) -> Donor:
     donor.reliability_score = min(SCORE_MAX, donor.reliability_score + SCORE_REWARD_DONATION)
     donor.total_donations += 1
     donor.last_donation_at = datetime.utcnow()
@@ -26,8 +28,9 @@ def reward_successful_donation(db: Session, donor: Donor) -> Donor:
         # First donation gets hospital-verified separately (see verification_service),
         # but we still count it here.
         pass
-    db.commit()
-    db.refresh(donor)
+    if commit:
+        db.commit()
+        db.refresh(donor)
     return donor
 
 
