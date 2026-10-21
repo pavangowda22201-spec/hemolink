@@ -63,6 +63,21 @@ class DonorOut(BaseModel):
     cooldown_until: Optional[datetime] = None
 
 
+class HospitalDonorOut(BaseModel):
+    """Minimal donor data available to authenticated hospitals."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    phone: str
+    blood_group: BloodGroup
+    is_verified: bool
+    is_available: bool
+    reliability_score: float
+    total_donations: int
+
+
 class RequestCreate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
