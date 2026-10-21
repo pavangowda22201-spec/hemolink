@@ -2,6 +2,7 @@
 RUN LOCATION: Imported by main.py — not run directly.
 """
 
+from datetime import datetime
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -13,6 +14,7 @@ from app.models.models import (
     BloodRequest,
     Donor,
     Acceptance,
+    AcceptanceStatus,
     User,
     UserType,
 )
@@ -139,6 +141,57 @@ def accept(
             status_code=400,
             detail=str(e),
         )
+
+
+@router.post(
+    "/{acceptance_id}/arrive",
+    response_model=AcceptanceOut,
+)
+def mark_arrived(
+    acceptance_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if current_user.user_type != UserType.DONOR:
+        raise HTTPException(
+            status_code=403,
+            detail="Donor account required.",
+        )
+
+    acceptance = (
+        db.query(Acceptance)
+        .filter(Acceptance.id == acceptance_id)
+        .first()
+    )
+    if not acceptance:
+        raise HTTPException(
+            status_code=404,
+            detail="Acceptance not found.",
+        )
+
+    donor = (
+        db.query(Donor)
+        .filter(Donor.id == acceptance.donor_id)
+        .first()
+    )
+    if not donor or donor.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="You can only mark your own acceptance as arrived.",
+        )
+
+    if acceptance.status != AcceptanceStatus.PENDING:
+        raise HTTPException(
+            status_code=400,
+            detail="This acceptance is no longer active.",
+        )
+
+    if acceptance.arrived_at is None:
+        acceptance.arrived_at = datetime.utcnow()
+        db.commit()
+        db.refresh(acceptance)
+
+    return acceptance
 
 
 @router.post(

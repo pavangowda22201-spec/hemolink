@@ -133,6 +133,7 @@ class AcceptanceOut(BaseModel):
     accepted_at: datetime
     eta_deadline: datetime
     resolved_at: Optional[datetime] = None
+    arrived_at: Optional[datetime] = None
 
 class HospitalAcceptanceOut(BaseModel):
     id: str

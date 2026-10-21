@@ -276,6 +276,11 @@ class Acceptance(Base):
         nullable=True,
     )
 
+    arrived_at = Column(
+        DateTime,
+        nullable=True,
+    )
+
     request = relationship(
         "BloodRequest",
         back_populates="acceptances",
