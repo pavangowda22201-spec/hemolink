@@ -118,6 +118,14 @@ def ensure_donor_health_profile_columns():
             "health_profile_updated_at TIMESTAMP"
         ))
 
+def ensure_acceptance_arrived_at_column():
+    with engine.begin() as connection:
+        connection.execute(text(
+            "ALTER TABLE acceptances "
+            "ADD COLUMN IF NOT EXISTS arrived_at TIMESTAMP"
+        ))
+
+
 def ensure_notification_log_user_id_column():
     with engine.begin() as connection:
         connection.execute(
