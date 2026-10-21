@@ -53,6 +53,28 @@ def search_donors(
     return query.order_by(Donor.name.asc()).limit(limit).all()
 
 
+@router.patch("/{donor_id}/verify", response_model=HospitalDonorOut)
+def verify_donor(
+    donor_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Mark a donor as identity-verified by an authenticated hospital."""
+    if current_user.user_type != UserType.HOSPITAL:
+        raise HTTPException(
+            status_code=403,
+            detail="Hospital account required.",
+        )
+
+    donor = db.query(Donor).filter(Donor.id == donor_id).first()
+    if not donor:
+        raise HTTPException(status_code=404, detail="Donor not found.")
+
+    donor.is_verified = True
+    db.commit()
+    db.refresh(donor)
+    return donor
+
 @router.get("/me", response_model=DonorOut)
 def get_my_donor_profile(
     current_user: User = Depends(get_current_user),
