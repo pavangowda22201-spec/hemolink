@@ -1,16 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from datetime import datetime
+from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.models.models import Donor, User, UserType
+from app.models.models import BloodGroup, Donor, User, UserType
 from app.schemas.schemas import (
     DonorCreate,
     DonorOut,
     DonorUpdate,
     DonorLocationUpdate,
     PushTokenUpdate,
+    HospitalDonorOut,
 )
 
 router = APIRouter(prefix="/donors", tags=["donors"])
@@ -19,6 +21,36 @@ router = APIRouter(prefix="/donors", tags=["donors"])
 @router.get("/", response_model=list[DonorOut])
 def list_donors(db: Session = Depends(get_db)):
     return db.query(Donor).order_by(Donor.created_at.desc()).all()
+
+
+@router.get("/search", response_model=list[HospitalDonorOut])
+def search_donors(
+    name: Optional[str] = Query(default=None, max_length=120),
+    phone: Optional[str] = Query(default=None, max_length=32),
+    blood_group: Optional[BloodGroup] = None,
+    limit: int = Query(default=50, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Search registered donors using privacy-minimized hospital data."""
+    if current_user.user_type != UserType.HOSPITAL:
+        raise HTTPException(
+            status_code=403,
+            detail="Hospital account required.",
+        )
+
+    query = db.query(Donor)
+
+    if name and name.strip():
+        query = query.filter(Donor.name.ilike(f"%{name.strip()}%"))
+
+    if phone and phone.strip():
+        query = query.filter(Donor.phone.ilike(f"%{phone.strip()}%"))
+
+    if blood_group is not None:
+        query = query.filter(Donor.blood_group == blood_group)
+
+    return query.order_by(Donor.name.asc()).limit(limit).all()
 
 
 @router.get("/me", response_model=DonorOut)
