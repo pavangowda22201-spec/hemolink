@@ -251,7 +251,11 @@ def fulfill(
         )
 
     except ValueError as e:
+        db.rollback()
         raise HTTPException(
             status_code=400,
             detail=str(e),
         )
+    except Exception:
+        db.rollback()
+        raise

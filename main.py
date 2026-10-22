@@ -13,6 +13,7 @@ from app.database import (
     ensure_acceptance_user_id_column,
     ensure_notification_log_user_id_column,
     ensure_acceptance_arrived_at_column,
+    ensure_donor_cooldown_columns,
 )
 from app.routers import donors, requests, acceptances, auth, tracking
 
@@ -20,6 +21,7 @@ from app.routers import donors, requests, acceptances, auth, tracking
 Base.metadata.create_all(bind=engine)
 ensure_notification_log_user_id_column()
 ensure_acceptance_arrived_at_column()
+ensure_donor_cooldown_columns()
 
 
 app = FastAPI(title="HemoLink - Blood Donor Matching API")

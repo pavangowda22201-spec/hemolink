@@ -97,6 +97,20 @@ def fulfill_request(db: Session, acceptance: Acceptance) -> Acceptance:
     Only the hospital fulfillment action counts a donation as completed.
     """
 
+    # Serialize fulfillment for this request to prevent concurrent over-counting.
+    request_id = acceptance.request_id
+    request = (
+        db.query(BloodRequest)
+        .filter(BloodRequest.id == request_id)
+        .with_for_update()
+        .populate_existing()
+        .one_or_none()
+    )
+    if request is None:
+        raise ValueError("Request no longer exists.")
+
+    # Reload acceptance state after acquiring the request lock.
+    db.refresh(acceptance)
     if acceptance.status != AcceptanceStatus.PENDING:
         raise ValueError("This acceptance is no longer pending.")
 
@@ -104,8 +118,6 @@ def fulfill_request(db: Session, acceptance: Acceptance) -> Acceptance:
         raise ValueError(
             "The donor must mark arrival before the hospital can fulfill this donation."
         )
-
-    request = acceptance.request
 
     if request.status not in (
         RequestStatus.OPEN,
@@ -139,7 +151,6 @@ def fulfill_request(db: Session, acceptance: Acceptance) -> Acceptance:
     request.fulfilled_units += units_to_fulfill
 
     reward_successful_donation(db, acceptance.donor, commit=False)
-    acceptance.donor.is_available = True
 
     if request.fulfilled_units >= request.units_needed:
         # All required units have been fulfilled.
@@ -157,7 +168,10 @@ def fulfill_request(db: Session, acceptance: Acceptance) -> Acceptance:
         for other in other_pending:
             other.status = AcceptanceStatus.STOOD_DOWN
             other.resolved_at = now
-            other.donor.is_available = True
+            other.donor.is_available = not (
+                other.donor.cooldown_until is not None
+                and other.donor.cooldown_until > now
+            )
     else:
         # More units are still required.
         request.status = RequestStatus.MATCHING
