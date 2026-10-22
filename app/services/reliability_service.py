@@ -42,6 +42,7 @@ def penalize_no_show(db: Session, donor: Donor) -> Donor:
     donor.reliability_score = max(SCORE_MIN, donor.reliability_score - SCORE_PENALTY_NO_SHOW)
     donor.total_no_shows += 1
     donor.cooldown_until = datetime.utcnow() + timedelta(hours=COOLDOWN_HOURS_AFTER_NO_SHOW)
+    donor.is_available = False
 
     if donor.total_no_shows >= NO_SHOW_SUSPEND_THRESHOLD:
         donor.is_suspended = True  # flagged for admin review / auto-suspended
