@@ -14,7 +14,8 @@ SCORE_PENALTY_NO_SHOW = 15.0
 SCORE_MIN = 0.0
 SCORE_MAX = 100.0
 
-COOLDOWN_HOURS_AFTER_NO_SHOW = 36  # within the 24-48h range requested
+COOLDOWN_HOURS_AFTER_NO_SHOW = 36  # existing no-show cooldown
+COOLDOWN_DAYS_AFTER_DONATION = 90  # whole-blood donor recovery interval
 NO_SHOW_SUSPEND_THRESHOLD = 3       # lifetime no-shows that trigger admin review/suspension
 
 
@@ -23,7 +24,10 @@ def reward_successful_donation(
 ) -> Donor:
     donor.reliability_score = min(SCORE_MAX, donor.reliability_score + SCORE_REWARD_DONATION)
     donor.total_donations += 1
-    donor.last_donation_at = datetime.utcnow()
+    now = datetime.utcnow()
+    donor.last_donation_at = now
+    donor.cooldown_until = now + timedelta(days=COOLDOWN_DAYS_AFTER_DONATION)
+    donor.is_available = False
     if not donor.is_verified:
         # First donation gets hospital-verified separately (see verification_service),
         # but we still count it here.

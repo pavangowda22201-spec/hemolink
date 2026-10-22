@@ -72,7 +72,10 @@ def expire_stale_requests(db: Session) -> int:
         for acceptance in pending_acceptances:
             acceptance.status = AcceptanceStatus.STOOD_DOWN
             acceptance.resolved_at = now
-            acceptance.donor.is_available = True
+            acceptance.donor.is_available = not (
+                acceptance.donor.cooldown_until is not None
+                and acceptance.donor.cooldown_until > now
+            )
 
     db.commit()
 

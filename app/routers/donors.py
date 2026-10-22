@@ -216,6 +216,20 @@ def update_my_availability(
             detail="Donor profile not created yet.",
         )
 
+    if is_available and donor.cooldown_until:
+        now = datetime.utcnow()
+        if donor.cooldown_until > now:
+            remaining_days = max(
+                1,
+                (donor.cooldown_until - now).days + 1,
+            )
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"You are in the post-donation recovery period. You can become available again after {donor.cooldown_until.isoformat()} (about {remaining_days} day(s) remaining)."
+                ),
+            )
+
     donor.is_available = is_available
 
     db.commit()

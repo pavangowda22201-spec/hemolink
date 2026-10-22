@@ -139,7 +139,6 @@ def fulfill_request(db: Session, acceptance: Acceptance) -> Acceptance:
     request.fulfilled_units += units_to_fulfill
 
     reward_successful_donation(db, acceptance.donor, commit=False)
-    acceptance.donor.is_available = True
 
     if request.fulfilled_units >= request.units_needed:
         # All required units have been fulfilled.
@@ -157,7 +156,10 @@ def fulfill_request(db: Session, acceptance: Acceptance) -> Acceptance:
         for other in other_pending:
             other.status = AcceptanceStatus.STOOD_DOWN
             other.resolved_at = now
-            other.donor.is_available = True
+            other.donor.is_available = not (
+                other.donor.cooldown_until is not None
+                and other.donor.cooldown_until > now
+            )
     else:
         # More units are still required.
         request.status = RequestStatus.MATCHING
