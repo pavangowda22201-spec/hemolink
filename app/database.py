@@ -126,6 +126,18 @@ def ensure_acceptance_arrived_at_column():
         ))
 
 
+def ensure_donor_cooldown_columns():
+    with engine.begin() as connection:
+        connection.execute(text(
+            "ALTER TABLE donors "
+            "ADD COLUMN IF NOT EXISTS last_donation_at TIMESTAMP"
+        ))
+        connection.execute(text(
+            "ALTER TABLE donors "
+            "ADD COLUMN IF NOT EXISTS cooldown_until TIMESTAMP"
+        ))
+
+
 def ensure_notification_log_user_id_column():
     with engine.begin() as connection:
         connection.execute(
