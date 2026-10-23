@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.models.models import BloodGroup, Donor, User, UserType
+from app.models.models import (BloodGroup, Donor, User, UserType, Acceptance, AcceptanceStatus)
 from app.schemas.schemas import (
     DonorCreate,
     DonorOut,
@@ -266,6 +266,55 @@ def update_my_location(
 
     db.commit()
     db.refresh(donor)
+
+    # Broadcast the updated location to hospital dashboards watching
+    # requests for which this donor has an active pending acceptance.
+    active_acceptances = (
+        db.query(Acceptance)
+        .filter(
+            Acceptance.donor_id == donor.id,
+            Acceptance.status == AcceptanceStatus.PENDING,
+        )
+        .all()
+    )
+
+    for acceptance in active_acceptances:
+        payload_data = {
+            "type": "donor_location",
+            "donor_id": donor.id,
+            "donor_name": donor.name,
+            "latitude": donor.latitude,
+            "longitude": donor.longitude,
+            "location_updated_at": (
+                donor.location_updated_at.isoformat()
+                if donor.location_updated_at else None
+            ),
+            "status": acceptance.status.value,
+            "accepted_at": (
+                acceptance.accepted_at.isoformat()
+                if acceptance.accepted_at else None
+            ),
+            "eta_deadline": (
+                acceptance.eta_deadline.isoformat()
+                if acceptance.eta_deadline else None
+            ),
+        }
+
+        from anyio import from_thread
+        from app.services.tracking_hub import tracking_hub
+
+        try:
+            from_thread.run(
+                tracking_hub.broadcast,
+                acceptance.request_id,
+                payload_data,
+            )
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception(
+                "Live tracking broadcast failed for request %s",
+                acceptance.request_id,
+            )
 
     return donor
 

@@ -249,6 +249,7 @@ def get_request_acceptances(
             accepted_at=acceptance.accepted_at,
             eta_deadline=acceptance.eta_deadline,
             resolved_at=acceptance.resolved_at,
+            arrived_at=acceptance.arrived_at,
             donor_name=donor.name,
             donor_phone=donor.phone,
             donor_blood_group=donor.blood_group,
