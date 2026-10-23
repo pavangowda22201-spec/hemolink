@@ -160,6 +160,7 @@ class HospitalAcceptanceOut(BaseModel):
     accepted_at: datetime
     eta_deadline: datetime
     resolved_at: Optional[datetime] = None
+    arrived_at: Optional[datetime] = None
 
     donor_name: str
     donor_phone: str
