@@ -247,6 +247,7 @@ def get_request_acceptances(
             units_fulfilled=acceptance.units_fulfilled,
             status=acceptance.status,
             accepted_at=acceptance.accepted_at,
+            arrived_at=acceptance.arrived_at,
             eta_deadline=acceptance.eta_deadline,
             resolved_at=acceptance.resolved_at,
             donor_name=donor.name,
