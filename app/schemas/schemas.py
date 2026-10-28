@@ -158,6 +158,7 @@ class HospitalAcceptanceOut(BaseModel):
     units_fulfilled: int
     status: AcceptanceStatus
     accepted_at: datetime
+    arrived_at: Optional[datetime] = None
     eta_deadline: datetime
     resolved_at: Optional[datetime] = None
 
