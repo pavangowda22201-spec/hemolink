@@ -284,3 +284,356 @@ https://hemolink-api-tm3c.onrender.com/docs
 ---
 
 **HemoLink — Connecting blood donors with people who need them.**
+ 
+
+## Complete Deployment Guide — HemoLink
+
+This guide explains how to deploy, configure, connect, verify, and maintain HemoLink. It is intended for developers taking over the project.
+
+## 1. Production architecture
+
+| Component | Technology | Hosting |
+|---|---|---|
+| Backend API | Python, FastAPI | Render |
+| Database | PostgreSQL | Render PostgreSQL or compatible PostgreSQL host |
+| Hospital dashboard | React, Vite | Vercel |
+| Android application | React Native, Expo | APK distribution |
+| Background processing | Python worker | Render Background Worker |
+
+### Production URLs
+
+- Backend: https://hemolink-api-tm3c.onrender.com
+- API documentation: https://hemolink-api-tm3c.onrender.com/docs
+- Hospital dashboard: https://hemo-link-dashboard.vercel.app
+- Backend GitHub: https://github.com/pavangowda22201-spec/hemolink
+
+The dashboard and mobile application are maintained separately from this backend repository.
+
+## 2. Backend deployment — Render
+
+### Prerequisites
+
+- GitHub account with repository access
+- Render account
+- Python 3.10+
+- PostgreSQL database
+
+### Create the backend service
+
+1. Sign in to https://render.com.
+2. Select **New → Web Service**.
+3. Connect the GitHub repository:
+   `pavangowda22201-spec/hemolink`
+4. Select the `main` branch.
+5. Configure the service:
+
+| Setting | Value |
+|---|---|
+| Runtime | Python |
+| Root Directory | Repository root |
+| Build Command | `pip install -r requirements.txt` |
+| Start Command | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
+
+6. Select the required service plan.
+7. Add the environment variables below.
+8. Click **Deploy Web Service**.
+9. Check the deployment logs for errors.
+
+### Backend environment variables
+
+Configure these in Render → Backend Service → Environment.
+
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_SECRET_KEY` | Private JWT signing secret |
+| `JWT_EXPIRE_MINUTES` | JWT token lifetime; default is 1440 minutes |
+
+Example format:
+
+```env
+DATABASE_URL=postgresql://USERNAME:PASSWORD@HOST:5432/DATABASE
+JWT_SECRET_KEY=YOUR_LONG_RANDOM_SECRET
+JWT_EXPIRE_MINUTES=1440
+```
+
+Replace example values with the actual production values. Never commit credentials or secrets to GitHub.
+
+**Security:** The development fallback JWT secret in the source code must not be used in production. Always configure a strong private production secret.
+
+### Verify the backend
+
+Open:
+
+- https://hemolink-api-tm3c.onrender.com
+- https://hemolink-api-tm3c.onrender.com/docs
+
+Confirm that the service responds and Swagger documentation loads.
+
+## 3. PostgreSQL database setup
+
+1. Sign in to Render.
+2. Select **New → PostgreSQL**.
+3. Create a database for HemoLink.
+4. Choose a region compatible with the backend service.
+5. Wait until the database is available.
+6. Copy the appropriate database connection string.
+7. Add it to the backend's `DATABASE_URL` environment variable.
+8. Redeploy the backend if necessary.
+
+Example connection format:
+
+```text
+postgresql://USERNAME:PASSWORD@HOST:5432/DATABASE
+```
+
+### Database safety
+
+The backend uses SQLAlchemy and creates model tables through `Base.metadata.create_all()` during startup. The current startup code also runs specific schema helper functions.
+
+Not every schema helper in the database module is automatically executed. Before deploying database-changing code:
+
+- Back up the production database.
+- Review the required schema changes.
+- Confirm that the existing schema is compatible.
+- Apply any required migrations safely.
+- Test the application before using production data.
+
+Never reset, drop, or recreate the production database as a routine deployment step.
+
+## 4. Hospital dashboard deployment — Vercel
+
+The hospital dashboard is a separate React/Vite project.
+
+Production URL:
+
+https://hemo-link-dashboard.vercel.app
+
+### Deployment procedure
+
+1. Sign in to https://vercel.com.
+2. Import the dashboard's GitHub repository.
+3. Select the correct production branch.
+4. Select the Vite framework preset if detected.
+5. Set the Root Directory to the dashboard project directory.
+6. Confirm the build command and output directory against the dashboard's `package.json` and Vite configuration.
+7. Configure the dashboard's API base URL to use:
+
+```text
+https://hemolink-api-tm3c.onrender.com
+```
+
+8. Add any required environment variables using the exact names expected by the dashboard source.
+9. Deploy the project.
+10. Open the deployed dashboard and test its connection to the backend.
+
+**Important:** The dashboard repository's exact environment-variable names, Root Directory, build command, and output directory must be verified in its own source and Vercel settings. Do not guess these values.
+
+## 5. Backend CORS configuration
+
+The backend currently allows the following dashboard origins:
+
+```text
+https://hemo-link-dashboard.vercel.app
+https://hemo-link-dashboard-fue4cgdlx-pavangowda22201-spec.vercel.app
+https://hemolink-dashboard.onrender.com
+```
+
+Local development origins are also configured in `main.py` on ports 5173, 5174, 5175, and 5176.
+
+If the dashboard domain changes:
+
+1. Update the backend CORS allow-list.
+2. Commit the backend change.
+3. Redeploy the backend.
+4. Test dashboard API requests again.
+
+Do not use unrestricted CORS settings as a production workaround.
+
+## 6. Android application deployment — Expo
+
+The mobile application is maintained in a separate Expo / React Native project.
+
+Known project information:
+
+| Setting | Value |
+|---|---|
+| Android application ID | `com.pavanmahesh131313.HemoLinkMobile` |
+| Expo project ID | `1a40cd2d-6e69-4770-acd0-146a5ca89712` |
+| Expo SDK | 57 |
+| API base URL | `https://hemolink-api-tm3c.onrender.com` |
+| Distribution | Android APK |
+
+### Local development
+
+Install Node.js and the project dependencies.
+
+```bash
+npm install
+npx expo start
+```
+
+For a connected Android development device:
+
+```bash
+npx expo run:android
+```
+
+### Release APK
+
+Use the Expo Application Services configuration belonging to the mobile project.
+
+Before creating a release:
+
+1. Inspect `app.json` or `app.config.*`.
+2. Inspect `eas.json`.
+3. Confirm the Android application ID.
+4. Confirm the production API base URL.
+5. Confirm the Expo account and project ownership.
+6. Confirm the intended EAS build profile.
+7. Build the Android APK using the verified profile.
+8. Install and test the APK on a physical Android device.
+
+The exact EAS build profile must be checked in the mobile repository before running the release command. Do not invent a profile or expose signing credentials.
+
+The current distribution method is APK sharing; Google Play Store publication is not part of this deployment process.
+
+## 7. Background worker — No-show checker
+
+The backend repository contains:
+
+```text
+scripts/no_show_checker.py
+```
+
+This is a separate background process. It must not replace the FastAPI Web Service start command.
+
+If automated no-show processing is required:
+
+1. Open Render.
+2. Select **New → Background Worker**.
+3. Connect the same backend repository.
+4. Select the production branch.
+5. Set the build command:
+
+```bash
+pip install -r requirements.txt
+```
+
+6. Set the start command:
+
+```bash
+python scripts/no_show_checker.py
+```
+
+7. Configure the required database and application environment variables.
+8. Deploy the worker.
+9. Check worker logs and confirm it remains healthy.
+
+The script's existence in the repository does not prove that a production worker is currently deployed. Confirm its status in Render.
+
+## 8. Deployment order
+
+For a new production environment, follow this order:
+
+1. Create PostgreSQL.
+2. Configure database access.
+3. Deploy the backend API.
+4. Verify backend health and API documentation.
+5. Deploy the hospital dashboard.
+6. Verify dashboard-to-backend communication.
+7. Configure and build the Android APK.
+8. Install and test the APK.
+9. Deploy the background worker if required.
+10. Complete the production verification checklist.
+
+## 9. Production verification checklist
+
+After deployment, verify the following:
+
+- [ ] Backend service is healthy on Render.
+- [ ] Swagger documentation opens.
+- [ ] PostgreSQL connection works.
+- [ ] Authentication works with a dedicated test account.
+- [ ] Donor profile retrieval works.
+- [ ] Compatible blood groups can be matched.
+- [ ] Incompatible blood groups are rejected.
+- [ ] Test blood requests can be created.
+- [ ] Donor acceptance and arrival workflow works.
+- [ ] Dashboard can communicate with the backend.
+- [ ] Mobile APK installs and communicates with the backend.
+- [ ] Location and tracking workflows work with test accounts.
+- [ ] Background worker is healthy if deployed.
+- [ ] Database backup and recovery procedures are documented.
+
+Use test accounts and test requests. Never conduct destructive tests against real emergency requests or donor data.
+
+## 10. Troubleshooting
+
+| Problem | What to check |
+|---|---|
+| Backend deployment fails | Render build logs, Python dependencies, start command |
+| Backend cannot connect to database | `DATABASE_URL`, database availability, credentials |
+| Authentication fails | JWT secret, token expiration, API response |
+| Dashboard API requests fail | API base URL, CORS allow-list, Vercel environment variables |
+| Mobile app cannot connect | Production API URL, network connection, backend health |
+| Worker stops | Render worker logs, environment variables, database connectivity |
+| Database schema errors | Existing schema, startup helpers, required migrations |
+
+Do not solve production issues by deleting user data, resetting the database, or changing unrelated application features.
+
+## 11. Maintenance and future releases
+
+### Backend
+
+1. Make and review changes in the backend repository.
+2. Test locally.
+3. Commit and push to the configured production branch.
+4. Monitor the Render deployment.
+5. Check logs and API health.
+
+### Dashboard
+
+1. Make and review changes in the dashboard project.
+2. Test the production API connection.
+3. Push to its configured production branch.
+4. Monitor the Vercel deployment.
+5. Verify the live dashboard.
+
+### Mobile
+
+1. Make and review changes in the Expo project.
+2. Test on a physical Android device.
+3. Confirm API configuration.
+4. Build a new APK using the verified EAS profile.
+5. Distribute and test the release APK.
+
+### Production security
+
+- Never commit `.env` files or credentials.
+- Never publish database passwords, JWT secrets, access tokens, or signing keys.
+- Use role-based access for Render, Vercel, Expo, and GitHub.
+- Back up the production database before schema changes.
+- Keep production and development configuration separate.
+- Review logs after every deployment.
+
+## 12. Final handover information
+
+A new developer taking ownership must receive appropriate access to:
+
+- GitHub backend repository.
+- Separate dashboard repository.
+- Separate mobile application repository.
+- Render backend service.
+- Render PostgreSQL database.
+- Render background worker, if deployed.
+- Vercel dashboard project.
+- Expo/EAS project.
+
+Confirm the actual service names, repository links, deployment settings, secrets ownership, and backup procedures directly with the project owner.
+
+**Never store passwords, private API keys, signing credentials, or production secrets in this README.**
+
+---
+
+**HemoLink — Connecting compatible blood donors with people who need them.**
